@@ -39,7 +39,7 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
     appTitle: settings.appTitle || 'PayMaster Pro',
     brandSubTitle: settings.brandSubTitle || 'Enterprise Payroll & HRMS',
   });
-  const [activeTab, setActiveTab] = useState<'profile' | 'rules' | 'delivery'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'rules'>('profile');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,17 +116,6 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
             }`}
           >
             Payroll & Statutory Rules
-          </button>
-          <button
-            onClick={() => setActiveTab('delivery')}
-            className={`py-3 border-b-2 transition cursor-pointer flex items-center space-x-1 ${
-              activeTab === 'delivery'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <PackageCheck className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Software Delivery & Whitelabel</span>
           </button>
         </div>
 
@@ -460,57 +449,6 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                     onChange={(e) => setFormData({ ...formData, ptSlabAmount: parseFloat(e.target.value) || 200 })}
                     className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
-                </div>
-
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'delivery' && (
-            <div className="space-y-4">
-              <div className="p-4 bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-xl space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-5 h-5 text-blue-300" />
-                  <h3 className="font-bold text-sm">How to Deliver this Software to Other Companies</h3>
-                </div>
-                <p className="text-xs text-blue-100 leading-relaxed">
-                  You can deliver and sell this application to any client or organization as a customized, white-labeled solution using any of the following 3 distribution methods:
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 text-xs">
-                
-                {/* Option 1: Live Cloud SaaS / Web Share Link */}
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                  <div className="flex items-center space-x-2 text-slate-900 font-bold">
-                    <Share2 className="w-4 h-4 text-blue-600" />
-                    <span>Option 1: Live Cloud Web URL (Instant SaaS Delivery)</span>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed">
-                    Click the <strong>Share</strong> button in Google AI Studio top navigation or deploy to Cloud Run. Your client can open the application instantly on any device (desktop, tablet, mobile) with full persistence and zero installation required.
-                  </p>
-                </div>
-
-                {/* Option 2: Export ZIP / GitHub Standalone Deployment */}
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                  <div className="flex items-center space-x-2 text-slate-900 font-bold">
-                    <FileCode2 className="w-4 h-4 text-indigo-600" />
-                    <span>Option 2: Standalone Full-Stack Export (ZIP / GitHub)</span>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed">
-                    From the AI Studio top-right settings menu, select <strong>Export to ZIP</strong> or <strong>Export to GitHub</strong>. You get the complete clean TypeScript/React codebase with `package.json`, ready to host on Vercel, Netlify, AWS, Docker, or on-premise private servers.
-                  </p>
-                </div>
-
-                {/* Option 3: Client White-Labeling */}
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                  <div className="flex items-center space-x-2 text-slate-900 font-bold">
-                    <Laptop className="w-4 h-4 text-emerald-600" />
-                    <span>Option 3: In-App Client Customization (Logo & Name)</span>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed">
-                    Each client can upload their own company logo, legal business name, tax registration number, payroll currency ($ / ₹ / € / £ / S$), and signatory details directly in the <strong>Company Profile</strong> tab. All payslips, Excel summaries, and PDF advice sheets will instantly adopt their brand.
-                  </p>
                 </div>
 
               </div>

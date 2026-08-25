@@ -258,10 +258,31 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       }
 
       const name = cols[0]?.trim() || `Employee ${index + 1}`;
-      const department = cols[1]?.trim() || 'Engineering';
-      const designation = cols[2]?.trim() || 'Specialist';
-      const salary = parseFloat(cols[3]?.replace(/[^0-9.]/g, '') || '') || 4500;
-      const paymentStr = cols[4]?.toLowerCase().trim() || 'bank_transfer';
+      
+      // Check if second column looks like an email or department
+      let email = '';
+      let department = 'Engineering';
+      let designation = 'Specialist';
+      let salary = 4500;
+      let paymentStr = 'bank_transfer';
+      let parsedJoinDate = todayDateStr;
+
+      if (cols[1]?.includes('@')) {
+        email = cols[1].trim();
+        department = cols[2]?.trim() || 'Engineering';
+        designation = cols[3]?.trim() || 'Specialist';
+        salary = parseFloat(cols[4]?.replace(/[^0-9.]/g, '') || '') || 4500;
+        paymentStr = cols[5]?.toLowerCase().trim() || 'bank_transfer';
+        parsedJoinDate = cols[6]?.trim() && cols[6].trim().match(/^\d{4}-\d{2}-\d{2}$/) ? cols[6].trim() : todayDateStr;
+      } else {
+        department = cols[1]?.trim() || 'Engineering';
+        designation = cols[2]?.trim() || 'Specialist';
+        salary = parseFloat(cols[3]?.replace(/[^0-9.]/g, '') || '') || 4500;
+        paymentStr = cols[4]?.toLowerCase().trim() || 'bank_transfer';
+        parsedJoinDate = cols[5]?.trim() && cols[5].trim().match(/^\d{4}-\d{2}-\d{2}$/) ? cols[5].trim() : todayDateStr;
+        email = `${name.toLowerCase().replace(/\s+/g, '.')}@${(settings.name || 'company').toLowerCase().replace(/\s+/g, '')}.com`;
+      }
+
       const paymentMethod: PaymentMethod = paymentStr.includes('cash') 
         ? 'cash' 
         : paymentStr.includes('upi') 
@@ -270,17 +291,13 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         ? 'cheque' 
         : 'bank_transfer';
 
-      const parsedJoinDate = cols[5]?.trim() && cols[5].trim().match(/^\d{4}-\d{2}-\d{2}$/) 
-        ? cols[5].trim() 
-        : todayDateStr;
-
       const nextIdNum = existingCount + parsedRows.length + 1;
 
       parsedRows.push({
         id: `bulk-pasted-${Date.now()}-${index}`,
         empId: `EMP-${(1000 + nextIdNum).toString()}`,
         name,
-        email: `${name.toLowerCase().replace(/\s+/g, '.')}@${(settings.name || 'company').toLowerCase().replace(/\s+/g, '')}.com`,
+        email,
         department: DEPARTMENTS.includes(department) ? department : 'Engineering',
         designation,
         structureType: 'fixed',
@@ -827,14 +844,15 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-2.5 w-12 text-center">#</th>
-                      <th className="p-2.5 min-w-[100px]">Emp ID</th>
-                      <th className="p-2.5 min-w-[150px]">Full Name <span className="text-rose-500">*</span></th>
+                      <th className="p-2.5 min-w-[95px]">Emp ID</th>
+                      <th className="p-2.5 min-w-[140px]">Full Name <span className="text-rose-500">*</span></th>
+                      <th className="p-2.5 min-w-[150px]">Work Email</th>
                       <th className="p-2.5 min-w-[130px]">Department</th>
                       <th className="p-2.5 min-w-[130px]">Designation <span className="text-rose-500">*</span></th>
                       <th className="p-2.5 min-w-[125px]">Joining Date</th>
-                      <th className="p-2.5 min-w-[105px]">Structure</th>
-                      <th className="p-2.5 min-w-[115px]">Base Salary ({sym}) <span className="text-rose-500">*</span></th>
-                      <th className="p-2.5 min-w-[125px]">Payment Mode</th>
+                      <th className="p-2.5 min-w-[100px]">Structure</th>
+                      <th className="p-2.5 min-w-[110px]">Base Salary ({sym}) <span className="text-rose-500">*</span></th>
+                      <th className="p-2.5 min-w-[120px]">Payment Mode</th>
                       <th className="p-2.5 min-w-[120px]">Account / Note</th>
                       <th className="p-2.5 w-10 text-center">Action</th>
                     </tr>
@@ -865,9 +883,30 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                             <input
                               type="text"
                               value={row.name}
-                              onChange={(e) => updateBulkRow(row.id, 'name', e.target.value)}
+                              onChange={(e) => {
+                                const newName = e.target.value;
+                                updateBulkRow(row.id, 'name', newName);
+                                // If email was empty or matches previous auto-gen, suggest email
+                                if (!row.email || row.email.endsWith(`@${(settings.name || 'company').toLowerCase().replace(/\s+/g, '')}.com`)) {
+                                  const suggested = newName.trim() 
+                                    ? `${newName.toLowerCase().replace(/\s+/g, '.')}@${(settings.name || 'company').toLowerCase().replace(/\s+/g, '')}.com`
+                                    : '';
+                                  updateBulkRow(row.id, 'email', suggested);
+                                }
+                              }}
                               placeholder="e.g. Sarah Jenkins"
                               className="w-full text-xs font-medium bg-white border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </td>
+
+                          {/* Work Email */}
+                          <td className="p-2">
+                            <input
+                              type="email"
+                              value={row.email}
+                              onChange={(e) => updateBulkRow(row.id, 'email', e.target.value)}
+                              placeholder="name@company.com"
+                              className="w-full text-xs font-medium bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                           </td>
 

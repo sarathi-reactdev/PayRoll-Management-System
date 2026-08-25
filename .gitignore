@@ -1,9 +1,12 @@
 node_modules/
 build/
 dist/
+release/
 coverage/
 release/
 .DS_Store
 *.log
+*.exe
+*.asar
 .env*
 !.env.example

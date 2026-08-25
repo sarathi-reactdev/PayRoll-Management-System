@@ -104,35 +104,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               </select>
             </div>
 
-            {/* Audit Trail Button */}
-            {currentRole !== 'employee' && (
-              <button
-                id="btn-audit-trail"
-                onClick={onOpenAuditTrail}
-                className="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition shadow-2xs"
-                title="Audit Trail & Modification Logs"
-              >
-                <ShieldCheck className="w-4 h-4 text-amber-600" />
-              </button>
-            )}
-
-            {/* Architecture & Tech Specs Modal Trigger */}
-            <button
-              id="btn-architecture-specs"
-              onClick={onOpenArchitecture}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium transition shadow-2xs"
-              title="System Architecture & Database Schema Documentation"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">System Specs</span>
-            </button>
-
             {/* Settings Trigger */}
             {currentRole !== 'employee' && (
               <button
                 id="btn-company-settings"
                 onClick={onOpenSettings}
-                className="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition shadow-2xs"
+                className="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition shadow-2xs cursor-pointer"
                 title="Payroll & Company Configuration"
               >
                 <Settings className="w-4 h-4 text-slate-500 hover:text-slate-800" />
