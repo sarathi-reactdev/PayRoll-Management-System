@@ -1,0 +1,6 @@
+{
+  "name": "PayMaster Pro - Payroll & Pay Slip Engine",
+  "description": "Enterprise-grade payroll calculation and pay slip generation suite with Excel attendance ingestion, customizable salary structures, audit trails, and multi-format export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

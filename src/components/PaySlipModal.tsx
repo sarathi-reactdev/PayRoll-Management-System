@@ -1,0 +1,473 @@
+import React from 'react';
+import { 
+  X, 
+  Download, 
+  Printer, 
+  Send, 
+  Building2, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Coins, 
+  Calendar,
+  User,
+  CreditCard,
+  Banknote,
+  Smartphone,
+  FileCheck,
+  Award
+} from 'lucide-react';
+import { SalaryBreakdown, CompanySettings, PaymentMethod } from '../types/payroll';
+import { generatePaySlipPDF } from '../utils/pdfGenerator';
+
+interface PaySlipModalProps {
+  isOpen: boolean;
+  salary: SalaryBreakdown | null;
+  settings: CompanySettings;
+  onClose: () => void;
+  onSendEmail?: (salary: SalaryBreakdown) => void;
+}
+
+export const PaySlipModal: React.FC<PaySlipModalProps> = ({
+  isOpen,
+  salary,
+  settings,
+  onClose,
+  onSendEmail,
+}) => {
+  if (!isOpen || !salary) return null;
+
+  const sym = settings.currencySymbol || '$';
+  const paymentMethod: PaymentMethod = salary.paymentMethod || salary.profile.preferredPaymentMethod || 'bank_transfer';
+  const isCash = paymentMethod === 'cash';
+  const isUpi = paymentMethod === 'upi';
+  const isCheque = paymentMethod === 'cheque';
+  const isBank = paymentMethod === 'bank_transfer';
+
+  const voucherRef = salary.paymentReference || (
+    isCash 
+      ? `CASH-VCHR-${salary.periodLabel.replace(/\s+/g, '')}-${salary.profile.empId}`
+      : isUpi
+      ? `UPI-${salary.profile.empId.toLowerCase()}@pay`
+      : isCheque
+      ? `CHQ-98402-${salary.profile.empId}`
+      : `ACH-TRF-90281-${salary.profile.empId}`
+  );
+
+  const getPaymentMethodLabel = () => {
+    switch (paymentMethod) {
+      case 'cash': return 'PAID BY CASH (Physical Treasury Voucher)';
+      case 'upi': return 'UPI / Instant Mobile Payment';
+      case 'cheque': return 'Cheque / Draft Issue';
+      default: return 'Direct Bank Transfer (ACH / NEFT)';
+    }
+  };
+
+  const getStatusBadge = () => {
+    switch (salary.status) {
+      case 'disbursed':
+        return { label: '✔ DISBURSED & PAID', bg: 'bg-emerald-600 text-white border-emerald-700' };
+      case 'approved':
+        return { label: '✔ AUDITED & APPROVED', bg: 'bg-blue-600 text-white border-blue-700' };
+      case 'under_review':
+        return { label: '⏳ UNDER HR REVIEW', bg: 'bg-amber-500 text-white border-amber-600' };
+      default:
+        return { label: '📝 DRAFT / REVIEW PENDING', bg: 'bg-slate-600 text-white border-slate-700' };
+    }
+  };
+
+  const statusBadge = getStatusBadge();
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        
+        {/* Action Header */}
+        <div className="px-6 py-3.5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between no-print">
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <span className="text-sm font-bold tracking-tight">Verified Employee Pay Slip & Payment Advice</span>
+            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              {salary.periodLabel}
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handlePrint}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition cursor-pointer"
+              title="Print document"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-400" />
+              <span>Print</span>
+            </button>
+
+            <button
+              onClick={() => generatePaySlipPDF(salary, settings)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
+              title="Download official PDF copy"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download PDF</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Printable Pay Slip Content Container */}
+        <div className="p-8 overflow-y-auto flex-1 bg-slate-50/40 print:p-0 print:bg-white text-slate-800 text-xs space-y-5" id="printable-payslip">
+          
+          {/* Main Paper Frame */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-5">
+            
+            {/* 1. Header: Company Brand & Pay Slip Title */}
+            <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center space-x-3">
+                  {settings.logoUrl ? (
+                    <img 
+                      src={settings.logoUrl} 
+                      alt="Company Logo" 
+                      className="w-10 h-10 rounded-lg object-contain bg-slate-50 border border-slate-200 p-0.5"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-lg font-extrabold text-slate-900 tracking-tight leading-tight">
+                      {settings.name}
+                    </h1>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      {settings.appTitle || 'Corporate Enterprise Payroll Services'}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-2 max-w-md leading-relaxed">
+                  {settings.address}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Tax ID: <span className="font-semibold text-slate-600">{settings.taxId}</span> • Email: {settings.email} • Tel: {settings.phone}
+                </p>
+              </div>
+
+              <div className="text-right sm:self-center space-y-1.5">
+                <div className="inline-block bg-blue-900 text-white font-bold text-xs px-3 py-1 rounded-md tracking-wider">
+                  PAYSLIP FOR {salary.periodLabel.toUpperCase()}
+                </div>
+                
+                <div className="flex items-center justify-end space-x-2">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadge.bg}`}>
+                    {statusBadge.label}
+                  </span>
+                </div>
+
+                <div className="text-[10px] text-slate-500 font-medium">
+                  Confidential • Ref: {salary.id}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Employee Demographic Information Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Employee ID</div>
+                <div className="text-xs font-extrabold text-slate-900 mt-0.5">{salary.profile.empId}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Employee Name</div>
+                <div className="text-xs font-bold text-slate-900 mt-0.5">{salary.profile.name}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Department</div>
+                <div className="text-xs font-semibold text-slate-800 mt-0.5">{salary.profile.department}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Designation</div>
+                <div className="text-xs text-slate-800 mt-0.5">{salary.profile.designation}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Date of Joining</div>
+                <div className="text-xs text-slate-800 mt-0.5">{salary.profile.joinDate}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Salary Structure</div>
+                <div className="text-xs font-semibold text-slate-800 mt-0.5 uppercase">{salary.profile.structureType}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">
+                  {isCash ? 'Disbursal Treasury' : 'Bank Name'}
+                </div>
+                <div className="text-xs font-medium text-slate-800 mt-0.5">
+                  {isCash ? 'Physical Cash Counter / Safe' : salary.profile.bankName}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">
+                  {isCash ? 'Cash Voucher #' : isUpi ? 'UPI ID' : 'Bank Account #'}
+                </div>
+                <div className="text-xs font-mono font-semibold text-slate-800 mt-0.5 truncate" title={voucherRef}>
+                  {isCash ? voucherRef : isUpi ? voucherRef : salary.profile.accountNumber}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Tax / SSN ID</div>
+                <div className="text-xs font-mono text-slate-800 mt-0.5">{salary.profile.panOrTaxNumber}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">PF / 401(k) A/C</div>
+                <div className="text-xs font-mono text-slate-800 mt-0.5">{salary.profile.pfAccountNumber || 'N/A'}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">
+                  {isCash ? 'Payout Location' : 'Routing / IFSC'}
+                </div>
+                <div className="text-xs font-mono text-slate-800 mt-0.5">
+                  {isCash ? 'Main Office Treasury' : salary.profile.routingOrIfsc}
+                </div>
+              </div>
+
+              {/* Dynamic Payment Mode Box */}
+              <div className="p-1.5 rounded bg-blue-50/80 border border-blue-200">
+                <div className="text-[9px] uppercase font-extrabold text-blue-800 flex items-center space-x-1">
+                  {isCash ? <Banknote className="w-3 h-3 text-amber-600" /> : <CreditCard className="w-3 h-3 text-blue-600" />}
+                  <span>Payment Mode</span>
+                </div>
+                <div className="text-xs font-extrabold text-slate-900 mt-0.5">
+                  {isCash ? (
+                    <span className="text-amber-800 font-bold">PAID BY CASH</span>
+                  ) : isUpi ? (
+                    <span className="text-indigo-800 font-bold">UPI / INSTANT</span>
+                  ) : isCheque ? (
+                    <span className="text-purple-800 font-bold">CHEQUE</span>
+                  ) : (
+                    <span className="text-blue-800 font-bold">BANK TRANSFER</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Attendance & Payable Matrix Banner */}
+            <div className="bg-slate-100/90 rounded-lg p-2.5 border border-slate-200 grid grid-cols-4 sm:grid-cols-7 gap-2 text-center text-xs">
+              <div className="border-r border-slate-200 last:border-0 pr-1">
+                <span className="text-[10px] text-slate-500 block">Total Days</span>
+                <span className="font-bold text-slate-900">{salary.totalDays}</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-1">
+                <span className="text-[10px] text-slate-500 block">Present</span>
+                <span className="font-bold text-emerald-700">{salary.attendance.daysPresent}</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-1">
+                <span className="text-[10px] text-slate-500 block">Paid Leaves</span>
+                <span className="font-bold text-slate-800">{salary.attendance.paidLeaves}</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-1">
+                <span className="text-[10px] text-slate-500 block">Half Days</span>
+                <span className="font-bold text-slate-800">{salary.attendance.halfDays}</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-1">
+                <span className="text-[10px] text-slate-500 block">LOP / Unpaid</span>
+                <span className="font-bold text-rose-600">{salary.lossOfPayDays}</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-1">
+                <span className="text-[10px] text-slate-500 block">Payable Days</span>
+                <span className="font-bold text-blue-700">{salary.payableDays}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block">Overtime</span>
+                <span className="font-bold text-purple-700">{salary.attendance.overtimeHours}h</span>
+              </div>
+            </div>
+
+            {/* 4. Dual Table: Earnings vs Deductions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              {/* Earnings Table */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="bg-blue-900 text-white font-bold px-3.5 py-2 flex items-center justify-between text-xs">
+                    <span>EARNINGS COMPONENT</span>
+                    <span>AMOUNT ({sym})</span>
+                  </div>
+                  <div className="divide-y divide-slate-100 bg-white">
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Basic Salary</span>
+                      <span className="font-semibold text-slate-900">{(salary.basicPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">House Rent Allowance (HRA)</span>
+                      <span className="font-semibold text-slate-900">{(salary.hra ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Conveyance Allowance</span>
+                      <span className="font-semibold text-slate-900">{(salary.conveyanceAllowance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Special Allowance</span>
+                      <span className="font-semibold text-slate-900">{(salary.specialAllowance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Overtime Compensation</span>
+                      <span className="font-semibold text-purple-700">+{(salary.overtimePay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Incentive & Bonus</span>
+                      <span className="font-semibold text-emerald-700">+{((salary.performanceBonus || 0) + (salary.reimbursements || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-3.5 py-2.5 bg-blue-50/70 font-bold flex justify-between text-blue-950 border-t border-blue-100">
+                  <span>TOTAL GROSS EARNINGS</span>
+                  <span>{sym} {(salary.grossEarnings ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+              {/* Deductions Table */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="bg-rose-900 text-white font-bold px-3.5 py-2 flex items-center justify-between text-xs">
+                    <span>DEDUCTIONS COMPONENT</span>
+                    <span>AMOUNT ({sym})</span>
+                  </div>
+                  <div className="divide-y divide-slate-100 bg-white">
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Provident Fund (PF 12%)</span>
+                      <span className="font-semibold text-slate-900">{(salary.providentFund ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Health Insurance / ESI</span>
+                      <span className="font-semibold text-slate-900">{(salary.esi ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Income Tax (TDS)</span>
+                      <span className="font-semibold text-slate-900">{(salary.incomeTaxTDS ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Professional Tax (PT)</span>
+                      <span className="font-semibold text-slate-900">{(salary.professionalTax ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Loss of Pay (LOP Deductions)</span>
+                      <span className="font-semibold text-rose-600">{(salary.lossOfPayDeduction ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Late Arrival Penalty</span>
+                      <span className="font-semibold text-rose-600">{(salary.lateDeduction ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="px-3.5 py-2 flex justify-between">
+                      <span className="text-slate-600 font-medium">Loan & Salary Advances</span>
+                      <span className="font-semibold text-slate-900">{(salary.otherDeductions ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-3.5 py-2.5 bg-rose-50/70 font-bold flex justify-between text-rose-950 border-t border-rose-100">
+                  <span>TOTAL DEDUCTIONS</span>
+                  <span>{sym} {(salary.totalDeductions ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* 5. Net Salary Highlight Banner Box */}
+            <div className={`border-2 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs ${
+              isCash ? 'bg-amber-50/90 border-amber-500/80' : 'bg-emerald-50 border-emerald-500/80'
+            }`}>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <div className={`text-xs uppercase font-extrabold tracking-wider ${isCash ? 'text-amber-900' : 'text-emerald-900'}`}>
+                    {isCash ? 'Net Cash Disbursed / Paid:' : 'Net Take-Home Disbursed:'}
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                    isCash ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'
+                  }`}>
+                    {getPaymentMethodLabel()}
+                  </span>
+                </div>
+                <div className={`text-xs italic font-medium mt-1 ${isCash ? 'text-amber-800' : 'text-emerald-800'}`}>
+                  Amount in words: <strong className="font-semibold">{salary.netPayInWords}</strong>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <div className={`text-2xl font-black tracking-tight ${isCash ? 'text-amber-800' : 'text-emerald-700'}`}>
+                  {sym} {(salary.netPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+                <div className={`text-[10px] font-medium ${isCash ? 'text-amber-800' : 'text-emerald-800'}`}>
+                  {isCash 
+                    ? `Physical Cash Voucher Ref: ${voucherRef}` 
+                    : isUpi 
+                    ? `UPI Settlement Ref: ${voucherRef}`
+                    : `Direct Bank Deposit to ${salary.profile?.bankName || 'Bank'}`
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Cash Acknowledgment Receipt / Bank Settlement Note */}
+            {isCash && (
+              <div className="bg-amber-50/60 border border-amber-300 rounded-xl p-3 text-[11px] text-amber-950 space-y-2">
+                <div className="font-bold flex items-center space-x-1.5">
+                  <Award className="w-4 h-4 text-amber-700" />
+                  <span>CASH DISBURSEMENT RECEIPT & HANDOVER ACKNOWLEDGMENT</span>
+                </div>
+                <p className="text-[10px] text-amber-900 leading-relaxed">
+                  I hereby acknowledge the receipt of net salary of <strong>{sym} {(salary.netPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> in physical currency / cash from <strong>{settings.name}</strong> for the pay period of {salary.periodLabel}.
+                </p>
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-amber-200/80 text-[10px]">
+                  <div>
+                    <span className="text-amber-800 font-semibold block">Disbursed by Cashier / Treasury:</span>
+                    <span className="text-slate-900 font-bold">{settings.companySignatoryName}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-amber-800 font-semibold block">Employee Signature / Fingerprint:</span>
+                    <span className="italic text-slate-700">___________________________ ({salary.profile.name})</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 7. Signatory & Digital Compliance Seal */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
+              <div>
+                <p>* Employer PF Contribution: {sym} {(salary.employerPF ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (Retirement benefits / not deducted from gross)</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  System Generated Electronic Pay Advice • Digitally authenticated under Payroll Compliance Act
+                </p>
+              </div>
+
+              <div className="text-center sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0">
+                <div className="font-bold text-slate-900">{settings.companySignatoryName}</div>
+                <div className="text-[10px] text-slate-500">{settings.companySignatoryTitle}</div>
+                <div className="text-[10px] text-slate-400">{settings.name}</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+};
