@@ -61,6 +61,7 @@
       "electron/**/*"
     ],
     "win": {
+      "icon": "public/icon.ico",
       "target": [
         "nsis"
         
