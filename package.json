@@ -46,10 +46,11 @@
   },
   "build": {
     "appId": "com.imatrix.payroll",
-    "productName": "Payroll Command Center",
+    "productName": "iMatrix Tech Solutions Payroll",
     "directories": {
       "output": "release"
     },
+    "artifactName": "${productName}-Setup-${version}.${ext}",
     "publish": {
       "provider": "github",
       "owner": "sarathi-reactdev",

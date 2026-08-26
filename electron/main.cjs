@@ -12,7 +12,7 @@ function createWindow() {
     height: 850,
     minWidth: 1024,
     minHeight: 700,
-    title: "Payroll Command Center",
+    title: "iMatrix Tech Solutions - Payroll & HRMS",
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
