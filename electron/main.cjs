@@ -12,7 +12,8 @@ function createWindow() {
     height: 850,
     minWidth: 1024,
     minHeight: 700,
-    title: "iMatrix Tech Solutions - Payroll & HRMS",
+    title: "iMatrix Technology Solutions — Payroll Management System",
+    icon: path.join(__dirname, '../public/imatrix-logo.svg'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

@@ -70,9 +70,9 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
   };
 
   const presetLogos = [
+    { name: 'iMatrix Official', url: '/imatrix-logo.svg' },
     { name: 'Modern Tech', url: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=160&auto=format&fit=crop&q=80' },
     { name: 'Corporate Crest', url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=160&auto=format&fit=crop&q=80' },
-    { name: 'Finance & Trust', url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=160&auto=format&fit=crop&q=80' },
   ];
 
   return (

@@ -1,15 +1,17 @@
 import { CompanySettings, EmployeeProfile, AttendanceRecord } from '../types/payroll';
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
-  name: 'Apex Global Technologies Inc.',
-  logoUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=160&auto=format&fit=crop&q=80',
-  address: 'Suite 400, 750 Tech Innovation Boulevard, Silicon Valley, CA 94025',
-  taxId: 'US-EIN-94-2849102',
-  email: 'payroll@apexglobal.tech',
-  phone: '+1 (800) 555-0199',
-  website: 'www.apexglobal.tech',
-  currency: 'USD',
-  currencySymbol: '$',
+  name: 'iMatrix Technology Solutions',
+  appTitle: 'iMatrix Technology Solutions',
+  brandSubTitle: 'Payroll Management System',
+  logoUrl: '/imatrix-logo.svg',
+  address: 'Tech Innovation Hub, Cyber Towers, Level 4, Chennai, TN',
+  taxId: 'GSTIN33AAACI9821F1Z8',
+  email: 'payroll@imatrix.tech',
+  phone: '+91 98400 12345',
+  website: 'www.imatrix.tech',
+  currency: 'INR',
+  currencySymbol: '₹',
   payCycleDayCount: 30,
   otRateMultiplier: 1.5,
   holidayOtMultiplier: 2.0,
@@ -17,10 +19,10 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   pfPercentage: 12,
   pfCapLimit: 1800,
   esiPercentage: 0.75,
-  esiWageThreshold: 3000,
+  esiWageThreshold: 21000,
   ptSlabAmount: 200,
-  companySignatoryName: 'Eleanor Vance',
-  companySignatoryTitle: 'Head of Global People Operations',
+  companySignatoryName: 'Authorized Signatory',
+  companySignatoryTitle: 'Head of Operations & Finance',
 };
 
 export const INITIAL_EMPLOYEES: EmployeeProfile[] = [
