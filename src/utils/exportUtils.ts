@@ -9,6 +9,9 @@ export function exportConsolidatedPayrollExcel(salaries: SalaryBreakdown[], sett
   const data = salaries.map(s => ({
     'Employee ID': s.profile.empId,
     'Employee Name': s.profile.name,
+    'Mobile Number': s.profile.mobileNumber || '',
+    'Email Address': s.profile.email || '',
+    'Date of Birth': s.profile.dob || '',
     'Department': s.profile.department,
     'Designation': s.profile.designation,
     'Structure': s.profile.structureType.toUpperCase(),
@@ -30,8 +33,6 @@ export function exportConsolidatedPayrollExcel(salaries: SalaryBreakdown[], sett
     'GROSS EARNINGS': s.grossEarnings,
     'Provident Fund (PF)': s.providentFund,
     'Employer PF (CTC)': s.employerPF,
-    'Health Insurance (ESI)': s.esi,
-    'Income Tax (TDS)': s.incomeTaxTDS,
     'Professional Tax (PT)': s.professionalTax,
     'LOP Deductions': s.lossOfPayDeduction,
     'Late Penalty': s.lateDeduction,
@@ -39,9 +40,11 @@ export function exportConsolidatedPayrollExcel(salaries: SalaryBreakdown[], sett
     'TOTAL DEDUCTIONS': s.totalDeductions,
     'NET PAY': s.netPay,
     'Currency': settings.currency,
+    'Payment Method': (s.paymentMethod || s.profile.preferredPaymentMethod || 'bank_transfer').toUpperCase(),
     'Bank Name': s.profile.bankName,
     'Account Number': s.profile.accountNumber,
     'Routing / IFSC': s.profile.routingOrIfsc,
+    'PF Account Number': s.profile.pfAccountNumber || '',
     'Status': s.status.toUpperCase(),
   }));
 

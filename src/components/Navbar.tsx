@@ -5,7 +5,10 @@ import {
   Settings, 
   BookOpen, 
   UserCheck, 
-  Calendar
+  Calendar,
+  Users,
+  History,
+  Send
 } from 'lucide-react';
 import { UserRole, CompanySettings } from '../types/payroll';
 
@@ -19,6 +22,9 @@ interface NavbarProps {
   onOpenArchitecture: () => void;
   onOpenUpload: () => void;
   onOpenAuditTrail: () => void;
+  onOpenEmployeeDirectory?: () => void;
+  onOpenHistoricalArchive?: () => void;
+  onOpenDispatchEngine?: () => void;
   employeeCount: number;
 }
 
@@ -32,6 +38,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenArchitecture,
   onOpenUpload,
   onOpenAuditTrail,
+  onOpenEmployeeDirectory,
+  onOpenHistoricalArchive,
+  onOpenDispatchEngine,
   employeeCount,
 }) => {
   return (
@@ -45,11 +54,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <img
                 src={companySettings.logoUrl}
                 alt="Logo"
-                className="w-9 h-9 rounded-lg object-contain bg-slate-50 border border-slate-200 p-0.5 shadow-2xs"
+                className="w-10 h-10 rounded-xl object-contain bg-white border border-slate-200/80 p-1 shadow-xs transition-transform hover:scale-105"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-xs shadow-blue-200">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-xs shadow-blue-200">
                 {(companySettings.appTitle || 'P').charAt(0).toUpperCase()}
               </div>
             )}
@@ -86,6 +95,35 @@ export const Navbar: React.FC<NavbarProps> = ({
                 title="Select any custom month and year for pay cycle"
               />
             </div>
+
+            {onOpenEmployeeDirectory && currentRole !== 'employee' && (
+              <button
+                id="btn-navbar-employees"
+                onClick={onOpenEmployeeDirectory}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-800 transition cursor-pointer shadow-2xs"
+                title="Manage Employee Directory (View, Search, Edit Mobile, Email, DOB & Salary)"
+              >
+                <Users className="w-3.5 h-3.5 text-blue-600" />
+                <span>Manage Employees</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-blue-600 text-white text-[10px] font-extrabold">
+                  {employeeCount}
+                </span>
+              </button>
+            )}
+
+            {onOpenHistoricalArchive && (
+              <button
+                id="btn-navbar-history"
+                onClick={onOpenHistoricalArchive}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-indigo-800 transition cursor-pointer shadow-2xs"
+                title="View and manage employee past payslip records and archives"
+              >
+                <History className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Past Payslips</span>
+              </button>
+            )}
+
+            
           </div>
 
           {/* Right Controls: Role Switcher & Action Tools */}

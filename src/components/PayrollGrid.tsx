@@ -19,10 +19,16 @@ import {
   AlertTriangle,
   Banknote,
   Landmark,
-  Smartphone
+  Smartphone,
+  Users,
+  Phone,
+  Mail,
+  UserCog,
+  MessageCircle
 } from 'lucide-react';
-import { SalaryBreakdown, CompanySettings, UserRole, SalaryStructureType, PaymentMethod } from '../types/payroll';
+import { SalaryBreakdown, CompanySettings, UserRole, SalaryStructureType, PaymentMethod, EmployeeProfile } from '../types/payroll';
 import { generatePaySlipPDF } from '../utils/pdfGenerator';
+import { openWhatsAppPayslip } from '../utils/whatsappHelper';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface PayrollGridProps {
@@ -34,6 +40,8 @@ interface PayrollGridProps {
   onBulkApprove: (selectedIds: string[]) => void;
   onBulkDownloadPDFs: (selectedSalaries: SalaryBreakdown[]) => void;
   onOpenAddEmployee?: () => void;
+  onEditEmployee?: (employee: EmployeeProfile) => void;
+  onOpenEmployeeDirectory?: () => void;
   onDeleteEmployee?: (empId: string, name: string) => void;
   onClearAllEmployees?: () => void;
   onUpdatePaymentMethod?: (empId: string, method: PaymentMethod) => void;
@@ -49,6 +57,8 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
   onBulkApprove,
   onBulkDownloadPDFs,
   onOpenAddEmployee,
+  onEditEmployee,
+  onOpenEmployeeDirectory,
   onDeleteEmployee,
   onClearAllEmployees,
   onUpdatePaymentMethod,
@@ -177,7 +187,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
             <button
               id="btn-grid-add-employee"
               onClick={onOpenAddEmployee}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-2xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Add Employee</span>
@@ -314,11 +324,17 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer" onClick={() => onViewPaySlip(s)}>
+                          <div className="font-bold text-slate-900">
                             {s.profile.name}
                           </div>
-                          <div className="text-[11px] text-slate-500 font-medium">
-                            {s.profile.empId} {s.profile.isProbation && <span className="text-amber-600 font-semibold">• Probation</span>}
+                          <div className="text-[11px] text-slate-500 font-medium flex items-center space-x-1">
+                            <span>{s.profile.empId}</span>
+                            {s.profile.isProbation && <span className="text-amber-600 font-semibold">• Probation</span>}
+                            {s.profile.mobileNumber && (
+                              <span className="text-emerald-700 font-medium hidden xl:inline" title={`Mobile: ${s.profile.mobileNumber}`}>
+                                • 📞 {s.profile.mobileNumber}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -444,20 +460,28 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
                     {/* Status */}
                     <td className="p-3 text-center">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        s.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
-                        s.status === 'disbursed' ? 'bg-purple-100 text-purple-800' :
-                        s.status === 'under_review' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                        s.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                       }`}>
-                        {s.status}
+                        {s.status === 'approved' ? 'Approved' : 'Pending'}
                       </span>
                     </td>
 
                     {/* Actions */}
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end space-x-1">
+                        {onEditEmployee && currentRole !== 'employee' && (
+                          <button
+                            onClick={() => onEditEmployee(s.profile)}
+                            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                            title={`Edit ${s.profile.name}'s Profile (Mobile, Email, DOB, Salary)`}
+                          >
+                            <UserCog className="w-4 h-4" />
+                          </button>
+                        )}
+
                         <button
                           onClick={() => onViewPaySlip(s)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
                           title="View Pay Slip Document"
                         >
                           <Eye className="w-4 h-4" />
@@ -466,7 +490,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
                         {currentRole !== 'employee' && (
                           <button
                             onClick={() => onOpenAdjustment(s)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
                             title="Adjust Figures / Bonus (Audit Logged)"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -474,8 +498,16 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
                         )}
 
                         <button
+                          onClick={() => openWhatsAppPayslip(s, settings)}
+                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
+                          title={`Send WhatsApp payslip advice to ${s.profile.name} (${s.profile.phone || 'no phone'})`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+
+                        <button
                           onClick={() => generatePaySlipPDF(s, settings)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
                           title="Download PDF Pay Slip"
                         >
                           <Download className="w-4 h-4" />

@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
-import { X, Send, Mail, CheckCircle2, AlertCircle, RefreshCw, Sparkles, FileText } from 'lucide-react';
-import { SalaryBreakdown, CompanySettings, EmailDispatchRecord } from '../types/payroll';
+import React, { useState, useEffect } from 'react';
+import { X, Send, Mail, CheckCircle2, RefreshCw, FileText, Download } from 'lucide-react';
+import { SalaryBreakdown, CompanySettings } from '../types/payroll';
+import { 
+  getFormattedPeriod, 
+  getPayslipPdfFileName, 
+  generateEmailSubject,
+  sendEmailPayslip
+} from '../utils/dispatchHelper';
+import { generatePaySlipPDF } from '../utils/pdfGenerator';
 
 interface EmailDistributionModalProps {
   isOpen: boolean;
@@ -15,24 +22,56 @@ export const EmailDistributionModal: React.FC<EmailDistributionModalProps> = ({
   salaries,
   settings,
 }) => {
-  if (!isOpen) return null;
-
-  const [subject, setSubject] = useState(`Official Pay Slip - ${salaries[0]?.periodLabel || 'August 2026'} - ${settings.name}`);
-  const [emailBody, setEmailBody] = useState(`Dear Employee,\n\nPlease find attached your verified monthly pay slip for the period ${salaries[0]?.periodLabel || 'August 2026'}.\n\nFor any inquiries or tax declarations, please contact ${settings.email}.\n\nWarm regards,\nPayroll Operations Team\n${settings.name}`);
-  
+  const [subject, setSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [dispatched, setDispatched] = useState<Record<string, 'sent' | 'pending' | 'failed'>>({});
   const [progress, setProgress] = useState(0);
 
+  useEffect(() => {
+    if (isOpen && salaries.length > 0) {
+      const activeSalary = salaries[0];
+      const period = getFormattedPeriod(activeSalary);
+      const companyName = settings.name || 'iMATRIX TECHNOLOGY SOLUTIONS';
+
+      setSubject(`Official Pay Slip - ${period.ymd} (${period.monthName}) - ${companyName}`);
+      setEmailBody(
+`Dear Employee,
+
+Please find attached your official Salary Pay Slip (PDF) for the pay period ${period.monthName} [${period.ymd}].
+
+Please inspect your take-home pay, working day breakdown, and tax deductions in the attached verified document.
+
+For any inquiries, please contact HR & Payroll Operations at ${settings.email || 'payroll@company.com'}.
+
+Warm regards,
+Payroll Operations Team
+${companyName}`
+      );
+      setIsSending(false);
+      setDispatched({});
+      setProgress(0);
+    }
+  }, [isOpen, salaries, settings]);
+
+  if (!isOpen) return null;
+
+  const handleSendOne = async (s: SalaryBreakdown) => {
+    const res = await sendEmailPayslip(s, settings, subject, emailBody);
+    if (res.success) {
+      setDispatched(prev => ({ ...prev, [s.empId]: 'sent' }));
+    }
+  };
+
   const handleStartDispatch = async () => {
     setIsSending(true);
     setProgress(0);
-    const updated: Record<string, 'sent' | 'pending' | 'failed'> = {};
+    const updated: Record<string, 'sent' | 'pending' | 'failed'> = { ...dispatched };
 
     for (let i = 0; i < salaries.length; i++) {
       const s = salaries[i];
-      // Simulate real-time email dispatch queue
-      await new Promise(r => setTimeout(r, 400));
+      generatePaySlipPDF(s, settings);
+      await new Promise(r => setTimeout(r, 250));
       updated[s.empId] = 'sent';
       setDispatched({ ...updated });
       setProgress(Math.round(((i + 1) / salaries.length) * 100));
@@ -57,7 +96,7 @@ export const EmailDistributionModal: React.FC<EmailDistributionModalProps> = ({
               <p className="text-xs text-slate-500">Automated dispatch of individual encrypted PDF salary slips</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -86,8 +125,9 @@ export const EmailDistributionModal: React.FC<EmailDistributionModalProps> = ({
                 className="w-full font-medium bg-white border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </div>
-            <p className="text-[11px] text-slate-500">
-              * Individual PDF payslips will be generated dynamically and securely attached to each recipient's email.
+            <p className="text-[11px] text-slate-500 flex items-center space-x-1">
+              <FileText className="w-3.5 h-3.5 text-blue-600" />
+              <span>Individual official 1-page PDF payslips are generated dynamically and attached for each recipient.</span>
             </p>
           </div>
 
@@ -126,28 +166,41 @@ export const EmailDistributionModal: React.FC<EmailDistributionModalProps> = ({
                     <th className="p-2.5">Emp ID</th>
                     <th className="p-2.5">Employee Name</th>
                     <th className="p-2.5">Target Email</th>
-                    <th className="p-2.5 text-right">Status</th>
+                    <th className="p-2.5">PDF Document</th>
+                    <th className="p-2.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
                   {salaries.map((s) => {
                     const status = dispatched[s.empId] || 'pending';
+                    const pdfFileName = getPayslipPdfFileName(s);
                     return (
                       <tr key={s.id} className="hover:bg-slate-50">
                         <td className="p-2.5 font-mono text-slate-600">{s.profile.empId}</td>
                         <td className="p-2.5 font-bold text-slate-900">{s.profile.name}</td>
                         <td className="p-2.5 text-slate-600 font-mono">{s.profile.email}</td>
-                        <td className="p-2.5 text-right">
-                          {status === 'sent' ? (
-                            <span className="inline-flex items-center space-x-1 text-emerald-700 font-bold">
+                        <td className="p-2.5 text-[10px] text-blue-600 font-mono">{pdfFileName}</td>
+                        <td className="p-2.5 text-right space-x-1 whitespace-nowrap">
+                          {status === 'sent' && (
+                            <span className="inline-flex items-center space-x-1 text-emerald-700 font-bold mr-2">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>Delivered</span>
                             </span>
-                          ) : isSending ? (
-                            <span className="text-blue-600 font-medium animate-pulse">Sending...</span>
-                          ) : (
-                            <span className="text-slate-400">Ready in Queue</span>
                           )}
+                          <button
+                            onClick={() => generatePaySlipPDF(s, settings)}
+                            className="p-1 text-slate-600 hover:bg-slate-100 rounded inline-block cursor-pointer"
+                            title="Download PDF"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleSendOne(s)}
+                            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-[11px] inline-flex items-center space-x-1 cursor-pointer"
+                          >
+                            <Mail className="w-3 h-3" />
+                            <span>Send</span>
+                          </button>
                         </td>
                       </tr>
                     );
@@ -163,7 +216,7 @@ export const EmailDistributionModal: React.FC<EmailDistributionModalProps> = ({
         <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
           <button
             onClick={onClose}
-            className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 transition"
+            className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 transition cursor-pointer"
           >
             Cancel
           </button>
@@ -171,7 +224,7 @@ export const EmailDistributionModal: React.FC<EmailDistributionModalProps> = ({
           <button
             disabled={isSending}
             onClick={handleStartDispatch}
-            className="inline-flex items-center space-x-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-lg shadow-xs transition"
+            className="inline-flex items-center space-x-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-lg shadow-xs transition cursor-pointer"
           >
             {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             <span>{isSending ? 'Sending in Progress...' : 'Start Email Dispatch Batch'}</span>

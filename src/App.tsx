@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { 
   DEFAULT_COMPANY_SETTINGS, 
   INITIAL_EMPLOYEES, 
-  INITIAL_ATTENDANCE 
+  INITIAL_ATTENDANCE,
+  INITIAL_HISTORICAL_PAYSLIPS
 } from './utils/sampleData';
 import { 
   CompanySettings, 
@@ -32,10 +33,13 @@ import { CompanySettingsModal } from './components/CompanySettingsModal';
 import { SalaryAdjustmentModal } from './components/SalaryAdjustmentModal';
 import { AuditTrailModal } from './components/AuditTrailModal';
 import { BankTransferModal } from './components/BankTransferModal';
-import { EmailDistributionModal } from './components/EmailDistributionModal';
+import { BulkDispatchModal } from './components/BulkDispatchModal';
 import { EmployeePortalView } from './components/EmployeePortalView';
 import { ArchitectureDocsModal } from './components/ArchitectureDocsModal';
 import { AddEmployeeModal } from './components/AddEmployeeModal';
+import { EmployeeDirectoryModal } from './components/EmployeeDirectoryModal';
+import { EditEmployeeModal } from './components/EditEmployeeModal';
+import { HistoricalPayslipModal } from './components/HistoricalPayslipModal';
 
 export default function App() {
   // State
@@ -70,6 +74,19 @@ export default function App() {
     return INITIAL_ATTENDANCE;
   });
 
+  // Historical Payslips storage
+  const [historicalSalaries, setHistoricalSalaries] = useState<SalaryBreakdown[]>(() => {
+    const saved = localStorage.getItem('paymaster_historical_salaries');
+    if (saved !== null) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return INITIAL_HISTORICAL_PAYSLIPS;
+      }
+    }
+    return INITIAL_HISTORICAL_PAYSLIPS;
+  });
+
   const [payrollStatus, setPayrollStatus] = useState<PayrollStatus>('draft');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
     {
@@ -87,6 +104,10 @@ export default function App() {
 
   // Modals state
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
+  const [isEmployeeDirectoryOpen, setIsEmployeeDirectoryOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeProfile | null>(null);
+  const [isHistoricalModalOpen, setIsHistoricalModalOpen] = useState(false);
+  const [historicalFilterEmpId, setHistoricalFilterEmpId] = useState<string | undefined>(undefined);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
@@ -273,6 +294,44 @@ export default function App() {
 
   const handleAddEmployee = (newEmployee: EmployeeProfile) => {
     handleAddMultipleEmployees([newEmployee]);
+  };
+
+  const handleSaveEditEmployee = (updatedEmployee: EmployeeProfile) => {
+    setEmployees(prev => {
+      const updated = prev.map(e => e.empId === updatedEmployee.empId ? updatedEmployee : e);
+      localStorage.setItem('paymaster_employees', JSON.stringify(updated));
+      return updated;
+    });
+
+    setAttendanceRecords(prev => {
+      const updated = prev.map(a => {
+        if (a.empId === updatedEmployee.empId) {
+          return {
+            ...a,
+            employeeName: updatedEmployee.name,
+            department: updatedEmployee.department,
+            baseSalary: updatedEmployee.baseSalary,
+          };
+        }
+        return a;
+      });
+      localStorage.setItem('paymaster_attendance', JSON.stringify(updated));
+      return updated;
+    });
+
+    const newLog: AuditLog = {
+      id: `audit-${Date.now()}`,
+      empId: updatedEmployee.empId,
+      employeeName: updatedEmployee.name,
+      fieldChanged: 'Employee Profile & Structure Update',
+      previousValue: 'Previous Profile',
+      newValue: `Updated (${updatedEmployee.designation}, ${updatedEmployee.department}, Base: ${companySettings.currencySymbol}${(updatedEmployee.baseSalary ?? 0).toLocaleString()})`,
+      changedBy: currentRole === 'super_admin' ? 'Super Admin' : 'HR Payroll Manager',
+      timestamp: new Date().toISOString(),
+      reason: 'Employee profile updated in Employee Directory',
+    };
+
+    setAuditLogs(prev => [newLog, ...prev]);
   };
 
   const handleAddMultipleEmployees = (newEmployees: EmployeeProfile[]) => {
@@ -481,6 +540,12 @@ export default function App() {
         onOpenArchitecture={() => setIsArchitectureOpen(true)}
         onOpenUpload={() => setIsUploadOpen(true)}
         onOpenAuditTrail={() => setIsAuditTrailOpen(true)}
+        onOpenEmployeeDirectory={() => setIsEmployeeDirectoryOpen(true)}
+        onOpenHistoricalArchive={() => {
+          setHistoricalFilterEmpId(undefined);
+          setIsHistoricalModalOpen(true);
+        }}
+        onOpenDispatchEngine={() => setIsEmailModalOpen(true)}
         employeeCount={employees.length}
       />
 
@@ -491,8 +556,13 @@ export default function App() {
           /* Employee Self-Service Portal View */
           <EmployeePortalView
             salaries={computedSalaries}
+            historicalSalaries={historicalSalaries}
             settings={companySettings}
             onViewPaySlip={(s) => setActivePaySlip(s)}
+            onOpenHistoricalArchive={(empId) => {
+              setHistoricalFilterEmpId(empId);
+              setIsHistoricalModalOpen(true);
+            }}
           />
         ) : (
           /* Administrative & HR View */
@@ -520,10 +590,13 @@ export default function App() {
               onBulkApprove={handleBulkApprove}
               onBulkDownloadPDFs={handleBulkDownloadPDFs}
               onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
+              onEditEmployee={(emp) => setEditingEmployee(emp)}
+              onOpenEmployeeDirectory={() => setIsEmployeeDirectoryOpen(true)}
               onDeleteEmployee={handleDeleteEmployee}
               onClearAllEmployees={handleClearAllEmployees}
               onUpdatePaymentMethod={handleUpdatePaymentMethod}
               onBulkSetPaymentMethod={handleBulkSetPaymentMethod}
+              onOpenDispatchEngine={() => setIsEmailModalOpen(true)}
             />
           </>
         )}
@@ -558,6 +631,97 @@ export default function App() {
         onAddMultipleEmployees={handleAddMultipleEmployees}
         settings={companySettings}
         existingCount={employees.length}
+      />
+
+      {/* 0.5 Employee Directory Modal */}
+      <EmployeeDirectoryModal
+        isOpen={isEmployeeDirectoryOpen}
+        onClose={() => setIsEmployeeDirectoryOpen(false)}
+        employees={employees}
+        settings={companySettings}
+        currentRole={currentRole}
+        onEditEmployee={(emp) => setEditingEmployee(emp)}
+        onDeleteEmployee={handleDeleteEmployee}
+        onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
+        onViewPaySlipForEmployee={(empId) => {
+          const s = computedSalaries.find(sal => sal.empId === empId);
+          if (s) setActivePaySlip(s);
+        }}
+        onOpenHistoricalPayslips={(empId) => {
+          setHistoricalFilterEmpId(empId);
+          setIsHistoricalModalOpen(true);
+        }}
+      />
+
+      {/* 0.6 Edit Employee Profile Modal */}
+      <EditEmployeeModal
+        isOpen={!!editingEmployee}
+        employee={editingEmployee}
+        settings={companySettings}
+        onClose={() => setEditingEmployee(null)}
+        onSave={handleSaveEditEmployee}
+      />
+
+      {/* 0.7 Historical Payslip Archive Modal */}
+      <HistoricalPayslipModal
+        isOpen={isHistoricalModalOpen}
+        onClose={() => {
+          setIsHistoricalModalOpen(false);
+          setHistoricalFilterEmpId(undefined);
+        }}
+        employees={employees}
+        historicalSalaries={historicalSalaries}
+        settings={companySettings}
+        currentRole={currentRole}
+        initialEmpId={historicalFilterEmpId}
+        onSaveHistoricalPayslip={(newRecord) => {
+          setHistoricalSalaries(prev => {
+            const updated = [newRecord, ...prev];
+            localStorage.setItem('paymaster_historical_salaries', JSON.stringify(updated));
+            return updated;
+          });
+          // Log audit
+          const newLog: AuditLog = {
+            id: `audit-${Date.now()}-hist`,
+            empId: newRecord.empId,
+            employeeName: newRecord.profile?.name || newRecord.empId,
+            fieldChanged: 'Historical Payslip Ingested',
+            previousValue: 'None',
+            newValue: `${newRecord.periodLabel} (${companySettings.currencySymbol || '$'}${newRecord.netPay})`,
+            changedBy: currentRole === 'super_admin' ? 'Super Admin' : 'HR Payroll Manager',
+            timestamp: new Date().toISOString(),
+            reason: `Manual entry of historical payslip for ${newRecord.periodLabel}`,
+          };
+          setAuditLogs(prev => [newLog, ...prev]);
+        }}
+        onBulkIngestHistorical={(records) => {
+          setHistoricalSalaries(prev => {
+            const updated = [...records, ...prev];
+            localStorage.setItem('paymaster_historical_salaries', JSON.stringify(updated));
+            return updated;
+          });
+          // Log audit
+          const newLog: AuditLog = {
+            id: `audit-${Date.now()}-hist-bulk`,
+            empId: 'BULK',
+            employeeName: `${records.length} Past Records`,
+            fieldChanged: 'Bulk Historical Payslips Upload',
+            previousValue: 'N/A',
+            newValue: `${records.length} Historical Statements Ingested`,
+            changedBy: currentRole === 'super_admin' ? 'Super Admin' : 'HR Payroll Manager',
+            timestamp: new Date().toISOString(),
+            reason: `Spreadsheet ingestion of ${records.length} past payslip records`,
+          };
+          setAuditLogs(prev => [newLog, ...prev]);
+        }}
+        onDeleteHistoricalPayslip={(id) => {
+          setHistoricalSalaries(prev => {
+            const updated = prev.filter(r => r.id !== id);
+            localStorage.setItem('paymaster_historical_salaries', JSON.stringify(updated));
+            return updated;
+          });
+        }}
+        onViewPaySlip={(record) => setActivePaySlip(record)}
       />
 
       {/* 1. Pay Slip View & PDF Generator */}
@@ -609,8 +773,8 @@ export default function App() {
         settings={companySettings}
       />
 
-      {/* 7. Email Distribution Dispatcher */}
-      <EmailDistributionModal
+      {/* 7. WhatsApp & Email Multi-Channel Dispatcher */}
+      <BulkDispatchModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
         salaries={computedSalaries}

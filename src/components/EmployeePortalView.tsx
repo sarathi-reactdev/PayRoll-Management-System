@@ -5,26 +5,48 @@ import {
   Calendar, 
   Wallet,
   CheckCircle2,
-  Receipt
+  Receipt,
+  History,
+  Eye,
+  FileSpreadsheet
 } from 'lucide-react';
 import { SalaryBreakdown, CompanySettings } from '../types/payroll';
 import { generatePaySlipPDF } from '../utils/pdfGenerator';
 
 interface EmployeePortalViewProps {
   salaries: SalaryBreakdown[];
+  historicalSalaries?: SalaryBreakdown[];
   settings: CompanySettings;
   onViewPaySlip: (salary: SalaryBreakdown) => void;
+  onOpenHistoricalArchive?: (empId?: string) => void;
 }
 
 export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
   salaries,
+  historicalSalaries = [],
   settings,
   onViewPaySlip,
+  onOpenHistoricalArchive,
 }) => {
   const sym = settings?.currencySymbol || '$';
   const [selectedEmpId, setSelectedEmpId] = useState(salaries[0]?.profile?.empId || '');
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string>('current');
 
-  const activeSalary = salaries.find(s => s.profile?.empId === selectedEmpId) || salaries[0];
+  const currentMonthSalary = salaries.find(s => s.profile?.empId === selectedEmpId) || salaries[0];
+
+  // All historical records for this employee
+  const employeePastSalaries = historicalSalaries.filter(s => s.empId === selectedEmpId);
+  
+  // All combined records (current + historical)
+  const allEmployeeStatements = [
+    ...(currentMonthSalary ? [currentMonthSalary] : []),
+    ...employeePastSalaries
+  ];
+
+  // Selected statement for the active display
+  const activeSalary = selectedMonthKey === 'current' 
+    ? currentMonthSalary 
+    : (allEmployeeStatements.find(s => s.month === selectedMonthKey || s.id === selectedMonthKey) || currentMonthSalary);
 
   if (!activeSalary || !activeSalary.profile) {
     return (
@@ -88,21 +110,57 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
           </div>
         </div>
 
-        {/* Employee Switcher */}
-        <div className="flex items-center space-x-2 bg-slate-800/80 border border-slate-700 p-2 rounded-xl text-xs">
-          <User className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-slate-400">Employee Portal:</span>
-          <select
-            value={selectedEmpId}
-            onChange={(e) => setSelectedEmpId(e.target.value)}
-            className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer pr-2"
-          >
-            {salaries.map((s) => (
-              <option key={s.profile?.empId || Math.random()} value={s.profile?.empId} className="bg-slate-900 text-white">
-                {s.profile?.name} ({s.profile?.empId})
+        {/* Employee & Period Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center space-x-2 bg-slate-800/80 border border-slate-700 p-2 rounded-xl text-xs">
+            <User className="w-3.5 h-3.5 text-blue-400" />
+            <span className="text-slate-400">Employee:</span>
+            <select
+              value={selectedEmpId}
+              onChange={(e) => {
+                setSelectedEmpId(e.target.value);
+                setSelectedMonthKey('current');
+              }}
+              className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer pr-2"
+            >
+              {salaries.map((s) => (
+                <option key={s.profile?.empId || Math.random()} value={s.profile?.empId} className="bg-slate-900 text-white">
+                  {s.profile?.name} ({s.profile?.empId})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2 bg-slate-800/80 border border-slate-700 p-2 rounded-xl text-xs">
+            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-slate-400">Statement:</span>
+            <select
+              value={selectedMonthKey}
+              onChange={(e) => setSelectedMonthKey(e.target.value)}
+              className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer pr-2"
+            >
+              <option value="current" className="bg-slate-900 text-white">
+                Current ({currentMonthSalary?.periodLabel || 'Active Month'})
               </option>
-            ))}
-          </select>
+              {employeePastSalaries.map((hist) => (
+                <option key={hist.id} value={hist.id} className="bg-slate-900 text-white">
+                  Past: {hist.periodLabel}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {onOpenHistoricalArchive && (
+            <button
+              type="button"
+              onClick={() => onOpenHistoricalArchive(selectedEmpId)}
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-bold text-xs border border-indigo-500/50 shadow-xs transition cursor-pointer"
+              title="Open full past payslips archive"
+            >
+              <History className="w-3.5 h-3.5" />
+              <span>Full Archive ({allEmployeeStatements.length})</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -120,7 +178,9 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
             </div>
             
             <div className="mt-3">
-              <span className="text-xs text-slate-300 block font-medium">Net Disbursed Take-Home Salary</span>
+              <span className="text-xs text-slate-300 block font-medium">
+                {activeSalary.status === 'disbursed' ? 'Net Salary Paid' : 'Net Salary to Pay'}
+              </span>
               <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-1">
                 {sym} {netPay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
@@ -129,7 +189,7 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
             <p className="text-xs text-slate-300 mt-2 flex items-center space-x-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>
-                Payment Disbursed via <strong>
+                Payment {activeSalary.status === 'disbursed' ? 'Disbursed' : 'Advice'} via <strong>
                   {activeSalary.paymentMethod === 'cash' 
                     ? 'Physical Cash Handover'
                     : activeSalary.paymentMethod === 'upi'
@@ -199,7 +259,7 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
               </div>
               {overtimePay > 0 && (
                 <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-600">Overtime ({att.overtimeHours || 0}h)</span>
+                  <span className="text-slate-600">Overtime (O.T. Hrs: {att.overtimeHours || 0}h)</span>
                   <span className="font-semibold text-purple-700">+{sym} {overtimePay.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
@@ -234,16 +294,8 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
                 <span className="font-semibold text-slate-900">{sym} {providentFund.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-50">
-                <span className="text-slate-600">ESI (Healthcare)</span>
-                <span className="font-semibold text-slate-900">{sym} {esi.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-50">
                 <span className="text-slate-600">Professional Tax (PT)</span>
                 <span className="font-semibold text-slate-900">{sym} {professionalTax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-50">
-                <span className="text-slate-600">Income Tax (TDS)</span>
-                <span className="font-semibold text-slate-900">{sym} {incomeTaxTDS.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
               {lossOfPayDeduction > 0 && (
                 <div className="flex justify-between py-1 border-b border-slate-50">
@@ -292,7 +344,7 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
                 <span className="font-bold text-slate-800">{att.paidLeaves || 0} days</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-50">
-                <span className="text-slate-600">Overtime Hours</span>
+                <span className="text-slate-600">O.T. Hrs</span>
                 <span className="font-bold text-purple-700">+{att.overtimeHours || 0} hrs</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-50">
@@ -338,7 +390,9 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
             </p>
           </div>
           <div className="text-right">
-            <span className="text-[11px] text-slate-500 font-medium">Net Disbursed: </span>
+            <span className="text-[11px] text-slate-500 font-medium">
+              {activeSalary.status === 'disbursed' ? 'Net Paid: ' : 'Net Salary: '}
+            </span>
             <strong className="text-xs text-emerald-700 font-extrabold">{sym} {netPay.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
           </div>
         </div>
@@ -358,53 +412,74 @@ export const EmployeePortalView: React.FC<EmployeePortalViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              <tr className="hover:bg-slate-50/80 transition bg-blue-50/20">
-                <td className="py-3 px-4 font-semibold text-slate-900">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                    <span>{activeSalary.periodLabel || 'Current Period'}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-slate-600">
-                  {profile.designation} ({profile.department})
-                </td>
-                <td className="py-3 px-4 text-slate-700 font-medium">
-                  {sym} {grossEarnings.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </td>
-                <td className="py-3 px-4 text-rose-600 font-medium">
-                  -{sym} {totalDeductions.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </td>
-                <td className="py-3 px-4 font-bold text-emerald-700 bg-emerald-50/40">
-                  {sym} {netPay.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </td>
-                <td className="py-3 px-4 text-slate-600">
-                  <span className="capitalize">
-                    {activeSalary.paymentMethod === 'cash' ? '💵 Cash' : activeSalary.paymentMethod === 'upi' ? '⚡ UPI' : activeSalary.paymentMethod === 'cheque' ? '📝 Cheque' : '🏦 Bank Transfer'}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                    Disbursed to Employee
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <div className="inline-flex items-center space-x-1.5 justify-end">
-                    <button
-                      onClick={() => onViewPaySlip(activeSalary)}
-                      className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] transition cursor-pointer"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => generatePaySlipPDF(activeSalary, settings)}
-                      className="p-1 rounded border border-slate-200 hover:bg-slate-100 text-slate-600 transition cursor-pointer"
-                      title="Download PDF"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              {allEmployeeStatements.map((stmt, idx) => {
+                const isSelected = (selectedMonthKey === 'current' && idx === 0) || selectedMonthKey === stmt.id || selectedMonthKey === stmt.month;
+                return (
+                  <tr 
+                    key={stmt.id || idx} 
+                    className={`hover:bg-slate-50/80 transition ${
+                      isSelected ? 'bg-indigo-50/40 font-medium' : ''
+                    }`}
+                  >
+                    <td className="py-3 px-4 font-semibold text-slate-900">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className={`w-3.5 h-3.5 ${idx === 0 ? 'text-blue-500' : 'text-indigo-500'}`} />
+                        <span>{stmt.periodLabel || 'Pay Period'}</span>
+                        {idx === 0 && (
+                          <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.2 rounded-sm uppercase">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-slate-600">
+                      {stmt.profile?.designation} ({stmt.profile?.department})
+                    </td>
+                    <td className="py-3 px-4 text-slate-700 font-medium">
+                      {sym} {(stmt.grossEarnings ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 px-4 text-rose-600 font-medium">
+                      -{sym} {(stmt.totalDeductions ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 px-4 font-bold text-emerald-700 bg-emerald-50/40">
+                      {sym} {(stmt.netPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 px-4 text-slate-600">
+                      <span className="capitalize">
+                        {stmt.paymentMethod === 'cash' ? '💵 Cash' : stmt.paymentMethod === 'upi' ? '⚡ UPI' : stmt.paymentMethod === 'cheque' ? '📝 Cheque' : '🏦 Bank Transfer'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        Approved
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="inline-flex items-center space-x-1.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedMonthKey(stmt.id || stmt.month);
+                            onViewPaySlip(stmt);
+                          }}
+                          className="px-2.5 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] transition cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 inline mr-1" />
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => generatePaySlipPDF(stmt, settings)}
+                          className="p-1 rounded border border-slate-200 hover:bg-slate-100 text-slate-600 transition cursor-pointer"
+                          title="Download PDF"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

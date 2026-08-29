@@ -2,7 +2,7 @@ export type SalaryStructureType = 'fixed' | 'hourly' | 'contract' | 'piece_rate'
 
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'cheque' | 'upi';
 
-export type PayrollStatus = 'draft' | 'under_review' | 'approved' | 'disbursed' | 'locked';
+export type PayrollStatus = 'draft' | 'pending_approval' | 'approved' | 'disbursed';
 
 export type UserRole = 'super_admin' | 'hr_manager' | 'dept_head' | 'employee';
 
@@ -36,6 +36,9 @@ export interface EmployeeProfile {
   empId: string;
   name: string;
   email: string;
+  mobileNumber?: string;
+  phone?: string;
+  dob?: string;
   department: string;
   designation: string;
   joinDate: string;

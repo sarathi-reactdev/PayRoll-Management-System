@@ -14,10 +14,12 @@ import {
   Banknote,
   Smartphone,
   FileCheck,
-  Award
+  Award,
+  MessageCircle
 } from 'lucide-react';
 import { SalaryBreakdown, CompanySettings, PaymentMethod } from '../types/payroll';
 import { generatePaySlipPDF } from '../utils/pdfGenerator';
+import { openWhatsAppPayslip } from '../utils/whatsappHelper';
 
 interface PaySlipModalProps {
   isOpen: boolean;
@@ -64,14 +66,10 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
   const getStatusBadge = () => {
     switch (salary.status) {
-      case 'disbursed':
-        return { label: '✔ DISBURSED & PAID', bg: 'bg-emerald-600 text-white border-emerald-700' };
       case 'approved':
-        return { label: '✔ AUDITED & APPROVED', bg: 'bg-blue-600 text-white border-blue-700' };
-      case 'under_review':
-        return { label: '⏳ UNDER HR REVIEW', bg: 'bg-amber-500 text-white border-amber-600' };
+        return { label: '✔ APPROVED', bg: 'bg-emerald-600 text-white border-emerald-700' };
       default:
-        return { label: '📝 DRAFT / REVIEW PENDING', bg: 'bg-slate-600 text-white border-slate-700' };
+        return { label: '⏳ REVIEW PENDING', bg: 'bg-amber-600 text-white border-amber-700' };
     }
   };
 
@@ -96,6 +94,15 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => openWhatsAppPayslip(salary, settings)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
+              title="Share payslip summary via WhatsApp"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
+            </button>
+
             <button
               onClick={handlePrint}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition cursor-pointer"
@@ -137,11 +144,11 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                     <img 
                       src={settings.logoUrl} 
                       alt="Company Logo" 
-                      className="w-10 h-10 rounded-lg object-contain bg-slate-50 border border-slate-200 p-0.5"
+                      className="w-11 h-11 rounded-xl object-contain bg-white border border-slate-200/90 p-1 shadow-2xs"
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                       <Building2 className="w-5 h-5" />
                     </div>
                   )}
@@ -158,7 +165,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                   {settings.address}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  Tax ID: <span className="font-semibold text-slate-600">{settings.taxId}</span> • Email: {settings.email} • Tel: {settings.phone}
+                  Email: {settings.email} • Tel: {settings.phone}
                 </p>
               </div>
 
@@ -174,7 +181,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                 </div>
 
                 <div className="text-[10px] text-slate-500 font-medium">
-                  Confidential • Ref: {salary.id}
+                  Ref ID: {salary.id}
                 </div>
               </div>
             </div>
@@ -203,7 +210,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
               <div>
                 <div className="text-[10px] uppercase font-bold text-slate-400">Date of Joining</div>
-                <div className="text-xs text-slate-800 mt-0.5">{salary.profile.joinDate}</div>
+                <div className="text-xs text-slate-800 mt-0.5">{salary.profile.joinDate || 'N/A'}</div>
               </div>
 
               <div>
@@ -212,49 +219,40 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
               </div>
 
               <div>
-                <div className="text-[10px] uppercase font-bold text-slate-400">
-                  {isCash ? 'Disbursal Treasury' : 'Bank Name'}
-                </div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">Bank / Mode</div>
                 <div className="text-xs font-medium text-slate-800 mt-0.5">
-                  {isCash ? 'Physical Cash Counter / Safe' : salary.profile.bankName}
+                  {isCash ? 'Physical Cash' : isUpi ? 'UPI Payment' : (salary.profile.bankName || 'Direct Bank')}
                 </div>
               </div>
 
               <div>
                 <div className="text-[10px] uppercase font-bold text-slate-400">
-                  {isCash ? 'Cash Voucher #' : isUpi ? 'UPI ID' : 'Bank Account #'}
+                  {isCash ? 'Voucher Ref #' : isUpi ? 'UPI ID / Ref' : 'Bank Account #'}
                 </div>
                 <div className="text-xs font-mono font-semibold text-slate-800 mt-0.5 truncate" title={voucherRef}>
-                  {isCash ? voucherRef : isUpi ? voucherRef : salary.profile.accountNumber}
+                  {isCash ? voucherRef : isUpi ? voucherRef : (salary.profile.accountNumber || 'N/A')}
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] uppercase font-bold text-slate-400">Tax / SSN ID</div>
-                <div className="text-xs font-mono text-slate-800 mt-0.5">{salary.profile.panOrTaxNumber}</div>
-              </div>
-
-              <div>
-                <div className="text-[10px] uppercase font-bold text-slate-400">PF / 401(k) A/C</div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">PF Account No</div>
                 <div className="text-xs font-mono text-slate-800 mt-0.5">{salary.profile.pfAccountNumber || 'N/A'}</div>
               </div>
 
               <div>
-                <div className="text-[10px] uppercase font-bold text-slate-400">
-                  {isCash ? 'Payout Location' : 'Routing / IFSC'}
-                </div>
+                <div className="text-[10px] uppercase font-bold text-slate-400">IFSC / Branch Code</div>
                 <div className="text-xs font-mono text-slate-800 mt-0.5">
-                  {isCash ? 'Main Office Treasury' : salary.profile.routingOrIfsc}
+                  {isCash ? 'N/A' : (salary.profile.routingOrIfsc || 'N/A')}
                 </div>
               </div>
 
               {/* Dynamic Payment Mode Box */}
-              <div className="p-1.5 rounded bg-blue-50/80 border border-blue-200">
+              <div className="col-span-2 p-1.5 rounded bg-blue-50/80 border border-blue-200 flex items-center justify-between">
                 <div className="text-[9px] uppercase font-extrabold text-blue-800 flex items-center space-x-1">
-                  {isCash ? <Banknote className="w-3 h-3 text-amber-600" /> : <CreditCard className="w-3 h-3 text-blue-600" />}
+                  {isCash ? <Banknote className="w-3.5 h-3.5 text-amber-600" /> : <CreditCard className="w-3.5 h-3.5 text-blue-600" />}
                   <span>Payment Mode</span>
                 </div>
-                <div className="text-xs font-extrabold text-slate-900 mt-0.5">
+                <div className="text-xs font-extrabold text-slate-900">
                   {isCash ? (
                     <span className="text-amber-800 font-bold">PAID BY CASH</span>
                   ) : isUpi ? (
@@ -295,8 +293,8 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                 <span className="font-bold text-blue-700">{salary.payableDays}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 block">Overtime</span>
-                <span className="font-bold text-purple-700">{salary.attendance.overtimeHours}h</span>
+                <span className="text-[10px] text-slate-500 block">O.T. Hrs</span>
+                <span className="font-bold text-purple-700">{salary.attendance.overtimeHours || 0}h</span>
               </div>
             </div>
 
@@ -328,7 +326,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                       <span className="font-semibold text-slate-900">{(salary.specialAllowance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="px-3.5 py-2 flex justify-between">
-                      <span className="text-slate-600 font-medium">Overtime Compensation</span>
+                      <span className="text-slate-600 font-medium">Overtime Pay (O.T.)</span>
                       <span className="font-semibold text-purple-700">+{(salary.overtimePay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="px-3.5 py-2 flex justify-between">
@@ -352,16 +350,8 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                   </div>
                   <div className="divide-y divide-slate-100 bg-white">
                     <div className="px-3.5 py-2 flex justify-between">
-                      <span className="text-slate-600 font-medium">Provident Fund (PF 12%)</span>
+                      <span className="text-slate-600 font-medium">Provident Fund (PF)</span>
                       <span className="font-semibold text-slate-900">{(salary.providentFund ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="px-3.5 py-2 flex justify-between">
-                      <span className="text-slate-600 font-medium">Health Insurance / ESI</span>
-                      <span className="font-semibold text-slate-900">{(salary.esi ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="px-3.5 py-2 flex justify-between">
-                      <span className="text-slate-600 font-medium">Income Tax (TDS)</span>
-                      <span className="font-semibold text-slate-900">{(salary.incomeTaxTDS ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="px-3.5 py-2 flex justify-between">
                       <span className="text-slate-600 font-medium">Professional Tax (PT)</span>
@@ -379,6 +369,10 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                       <span className="text-slate-600 font-medium">Loan & Salary Advances</span>
                       <span className="font-semibold text-slate-900">{(salary.otherDeductions ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
+                    <div className="px-3.5 py-2 flex justify-between text-slate-400">
+                      <span className="font-medium">-</span>
+                      <span>-</span>
+                    </div>
                   </div>
                 </div>
                 <div className="px-3.5 py-2.5 bg-rose-50/70 font-bold flex justify-between text-rose-950 border-t border-rose-100">
@@ -389,31 +383,31 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
             </div>
 
-            {/* 5. Net Salary Highlight Banner Box */}
+            {/* 5. Salary Paid / To Pay Highlight Banner Box */}
             <div className={`border-2 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs ${
-              isCash ? 'bg-amber-50/90 border-amber-500/80' : 'bg-emerald-50 border-emerald-500/80'
+              salary.status === 'disbursed' ? 'bg-emerald-50 border-emerald-500/80' : 'bg-blue-50/90 border-blue-500/80'
             }`}>
               <div>
                 <div className="flex items-center space-x-2">
-                  <div className={`text-xs uppercase font-extrabold tracking-wider ${isCash ? 'text-amber-900' : 'text-emerald-900'}`}>
-                    {isCash ? 'Net Cash Disbursed / Paid:' : 'Net Take-Home Disbursed:'}
+                  <div className={`text-xs uppercase font-extrabold tracking-wider ${salary.status === 'disbursed' ? 'text-emerald-900' : 'text-blue-900'}`}>
+                    {salary.status === 'disbursed' ? 'Salary Paid:' : 'Salary to Pay:'}
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    isCash ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'
+                    salary.status === 'disbursed' ? 'bg-emerald-200 text-emerald-900' : 'bg-blue-200 text-blue-900'
                   }`}>
                     {getPaymentMethodLabel()}
                   </span>
                 </div>
-                <div className={`text-xs italic font-medium mt-1 ${isCash ? 'text-amber-800' : 'text-emerald-800'}`}>
+                <div className={`text-xs italic font-medium mt-1 ${salary.status === 'disbursed' ? 'text-emerald-800' : 'text-blue-800'}`}>
                   Amount in words: <strong className="font-semibold">{salary.netPayInWords}</strong>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className={`text-2xl font-black tracking-tight ${isCash ? 'text-amber-800' : 'text-emerald-700'}`}>
+                <div className={`text-2xl font-black tracking-tight ${salary.status === 'disbursed' ? 'text-emerald-700' : 'text-blue-800'}`}>
                   {sym} {(salary.netPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
-                <div className={`text-[10px] font-medium ${isCash ? 'text-amber-800' : 'text-emerald-800'}`}>
+                <div className={`text-[10px] font-medium ${salary.status === 'disbursed' ? 'text-emerald-800' : 'text-blue-800'}`}>
                   {isCash 
                     ? `Physical Cash Voucher Ref: ${voucherRef}` 
                     : isUpi 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 
 interface ConfirmDeleteModalProps {

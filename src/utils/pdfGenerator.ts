@@ -4,7 +4,7 @@ import { CompanySettings, SalaryBreakdown } from '../types/payroll';
 
 /**
  * Generates an executive-level, professional PDF Pay Slip for an employee
- * Guaranteed 1-page pixel-perfect alignment with zero text overlapping
+ * Guaranteed 1-page pixel-perfect alignment with balanced margins and zero text overlapping
  */
 export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySettings, returnBlob = false): any {
   const doc = new jsPDF({
@@ -16,6 +16,7 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
   const pageWidth = 210;
   const leftMargin = 14;
   const contentWidth = 182; // 210 - 28
+  const topMargin = 12; // Balanced top margin so it does not cling to the top edge
 
   // Clean currency symbol safe for standard PDF fonts
   let symbol = settings.currencySymbol || '$';
@@ -29,12 +30,12 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
   const isCheque = paymentMethod === 'cheque';
 
   const paymentModeLabel = isCash 
-    ? 'PAID BY CASH (Treasury Counter)'
+    ? 'Paid by Cash'
     : isUpi
-    ? 'UPI / Instant Mobile Payment'
+    ? 'UPI / Instant Payment'
     : isCheque
-    ? 'Cheque Disbursement'
-    : 'Direct Bank Transfer (NEFT/ACH)';
+    ? 'Cheque'
+    : 'Bank Transfer';
 
   const voucherRef = salary.paymentReference || (
     isCash 
@@ -46,65 +47,55 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
       : `ACH-TRF-90281-${salary.profile.empId}`
   );
 
-  const statusText = salary.status === 'disbursed'
-    ? 'APPROVED & PAID'
-    : salary.status === 'approved'
-    ? 'AUDITED & APPROVED'
-    : salary.status === 'under_review'
-    ? 'UNDER REVIEW'
-    : 'DRAFT ADVICE';
+  const statusText = salary.status === 'approved'
+    ? 'APPROVED'
+    : 'REVIEW PENDING';
 
-  // 1. Header Banner Background (Subtle corporate slate)
-  doc.setFillColor(243, 246, 250);
-  doc.rect(0, 0, pageWidth, 40, 'F');
-
-  // Navy accent top line
-  doc.setFillColor(30, 58, 138); // navy-900
-  doc.rect(0, 0, pageWidth, 3.5, 'F');
+  // 1. Header Frame & Branding (Cleanly placed with top margin)
+  // Outer header rounded card
+  doc.setFillColor(245, 247, 250);
+  doc.roundedRect(leftMargin, topMargin, contentWidth, 32, 2, 2, 'F');
+  
+  // Top brand accent strip
+  doc.setFillColor(30, 58, 138); // Navy
+  doc.roundedRect(leftMargin, topMargin, contentWidth, 2.5, 1, 1, 'F');
 
   // Company Name & Info
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(30, 41, 59); // slate-800
-  doc.text(settings.name, leftMargin, 13);
+  doc.setFontSize(13);
+  doc.setTextColor(15, 23, 42); // slate-900
+  doc.text(settings.name, leftMargin + 4, topMargin + 9);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139); // slate-500
-  doc.text(settings.address, leftMargin, 18.5);
-  doc.text(`Tax ID / EIN: ${settings.taxId}  |  Email: ${settings.email}  |  Phone: ${settings.phone}`, leftMargin, 23.5);
+  doc.text(settings.address || 'Corporate Headquarters', leftMargin + 4, topMargin + 14.5);
+  doc.text(`Email: ${settings.email || 'payroll@company.com'}  |  Phone: ${settings.phone || '+91 98400 12345'}`, leftMargin + 4, topMargin + 19);
 
-  // Pay Slip Title Badge & Status Badge on Top Right
+  // Payslip Title & Period Badge on Top Right (No "Confidential" wording)
   doc.setFillColor(30, 58, 138);
-  doc.roundedRect(pageWidth - leftMargin - 56, 9, 56, 10.5, 2, 2, 'F');
+  doc.roundedRect(pageWidth - leftMargin - 66, topMargin + 5.5, 62, 8.5, 1.5, 1.5, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.8);
   doc.setTextColor(255, 255, 255);
-  doc.text('CONFIDENTIAL PAYSLIP', pageWidth - leftMargin - 28, 15.5, { align: 'center' });
+  doc.text(`PAYSLIP FOR ${salary.periodLabel.toUpperCase()}`, pageWidth - leftMargin - 35, topMargin + 11.2, { align: 'center' });
 
-  // Status Stamp Badge
-  if (salary.status === 'disbursed' || isCash) {
-    doc.setFillColor(22, 101, 52); // green-800
-  } else if (salary.status === 'approved') {
-    doc.setFillColor(30, 58, 138); // blue-900
+  // Status Badge
+  if (salary.status === 'approved') {
+    doc.setFillColor(22, 101, 52); // green
   } else {
-    doc.setFillColor(100, 116, 139);
+    doc.setFillColor(180, 83, 9); // amber
   }
-  doc.roundedRect(pageWidth - leftMargin - 56, 22, 56, 6, 1, 1, 'F');
+  doc.roundedRect(pageWidth - leftMargin - 66, topMargin + 16, 62, 5.5, 1, 1, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
+  doc.setFontSize(6.8);
   doc.setTextColor(255, 255, 255);
-  doc.text(`STATUS: ${statusText}`, pageWidth - leftMargin - 28, 26.2, { align: 'center' });
+  doc.text(`STATUS: ${statusText}`, pageWidth - leftMargin - 35, topMargin + 19.8, { align: 'center' });
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`Period: ${salary.periodLabel}`, pageWidth - leftMargin - 56, 33);
-
-  // Divider line
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.4);
-  doc.line(leftMargin, 40, pageWidth - leftMargin, 40);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Pay Slip Ref: ${salary.id}`, pageWidth - leftMargin - 66, topMargin + 26);
 
   // 2. Employee Summary Info Grid
   const empInfo = [
@@ -121,33 +112,27 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
       { content: salary.profile.designation, styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
     ],
     [
-      { content: 'Date of Joining:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
-      { content: salary.profile.joinDate, styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
-      { content: 'Salary Structure:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
-      { content: salary.profile.structureType.toUpperCase(), styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
+      { content: 'Contact / Mobile:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
+      { content: salary.profile.mobileNumber || salary.profile.email || 'N/A', styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
+      { content: 'DOB / Joining:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
+      { content: `${salary.profile.dob ? `DOB: ${salary.profile.dob} | ` : ''}Joined: ${salary.profile.joinDate || 'N/A'}`, styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
     ],
     [
-      { content: isCash ? 'Disbursal Mode:' : 'Bank / Channel:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
+      { content: 'Payment Mode:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
       { content: paymentModeLabel, styles: { fontStyle: 'bold', textColor: isCash ? [180, 83, 9] : [30, 58, 138] } },
-      { content: isCash ? 'Cash Voucher #:' : isUpi ? 'UPI ID / Ref:' : 'Bank Account #:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
-      { content: isCash ? voucherRef : isUpi ? voucherRef : salary.profile.accountNumber, styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
-    ],
-    [
-      { content: 'Tax / SSN ID:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
-      { content: salary.profile.panOrTaxNumber, styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
-      { content: isCash ? 'Treasury Office:' : 'Routing / IFSC:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
-      { content: isCash ? 'Corporate Cash Safe' : (salary.profile.routingOrIfsc || 'N/A'), styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
+      { content: isCash ? 'Voucher Ref #:' : isUpi ? 'UPI ID / Ref:' : 'Bank Account / PF:', styles: { fontStyle: 'bold', textColor: [100, 116, 139] } },
+      { content: isCash ? voucherRef : isUpi ? voucherRef : `${salary.profile.accountNumber || 'N/A'}${salary.profile.pfAccountNumber ? ` (PF: ${salary.profile.pfAccountNumber})` : ''}`, styles: { fontStyle: 'normal', textColor: [15, 23, 42] } },
     ],
   ];
 
   autoTable(doc, {
     body: empInfo as any,
-    startY: 42.5,
+    startY: topMargin + 35,
     theme: 'plain',
     tableWidth: contentWidth,
     styles: {
-      fontSize: 7.8,
-      cellPadding: 1.3,
+      fontSize: 8,
+      cellPadding: 1.4,
     },
     columnStyles: {
       0: { cellWidth: 32 },
@@ -158,8 +143,8 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
     margin: { left: leftMargin, right: leftMargin },
   });
 
-  // 3. Attendance Overview Bar
-  const attendanceStartY = (doc as any).lastAutoTable.finalY + 2;
+  // 3. Attendance Overview Bar with O.T. Hrs
+  const attendanceStartY = (doc as any).lastAutoTable.finalY + 2.5;
   const attendanceData = [
     [
       `Total Days: ${salary.totalDays}`,
@@ -168,7 +153,7 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
       `Half-Days: ${salary.attendance.halfDays}`,
       `LOP (Unpaid): ${salary.lossOfPayDays}`,
       `Payable Days: ${salary.payableDays}`,
-      `OT: ${salary.attendance.overtimeHours}h`,
+      `O.T. Hrs: ${salary.attendance.overtimeHours || 0}h`,
     ],
   ];
 
@@ -185,12 +170,12 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
       textColor: [30, 41, 59],
       lineColor: [203, 213, 225],
       lineWidth: 0.2,
-      cellPadding: 1.4,
+      cellPadding: 1.5,
     },
     margin: { left: leftMargin, right: leftMargin },
   });
 
-  // 4. Earnings vs Deductions Dual Table
+  // 4. Earnings vs Deductions Dual Table (Health Insurance & Income Tax removed)
   const tableStartY = (doc as any).lastAutoTable.finalY + 3.5;
   const incentiveBonus = (salary.performanceBonus || 0) + (salary.reimbursements || 0);
 
@@ -199,20 +184,21 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
     ['House Rent Allowance (HRA)', `${symbol} ${(salary.hra ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Conveyance Allowance', `${symbol} ${(salary.conveyanceAllowance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Special Allowance', `${symbol} ${(salary.specialAllowance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
-    ['Overtime Pay', `${symbol} ${(salary.overtimePay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+    ['Overtime Pay (O.T.)', `${symbol} ${(salary.overtimePay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Holiday Shift Pay', `${symbol} ${(salary.holidayWorkPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Incentive & Bonus', `${symbol} ${incentiveBonus.toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Total Gross Earnings', `${symbol} ${(salary.grossEarnings ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
   ];
 
+  // Clean deductions without health insurance and without income tax
   const deductionsRows = [
-    ['Provident Fund (PF 12%)', `${symbol} ${(salary.providentFund ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
-    ['Health Insurance / ESI', `${symbol} ${(salary.esi ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
-    ['Income Tax (TDS)', `${symbol} ${(salary.incomeTaxTDS ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+    ['Provident Fund (PF)', `${symbol} ${(salary.providentFund ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Professional Tax (PT)', `${symbol} ${(salary.professionalTax ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
-    ['Loss of Pay (LOP)', `${symbol} ${(salary.lossOfPayDeduction ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+    ['Loss of Pay (LOP Deductions)', `${symbol} ${(salary.lossOfPayDeduction ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Late Arrival Penalty', `${symbol} ${(salary.lateDeduction ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
     ['Loan & Salary Advances', `${symbol} ${(salary.otherDeductions ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+    ['Other Statutory Deductions', `${symbol} 0.00`],
+    ['', ''],
     ['Total Deductions', `${symbol} ${(salary.totalDeductions ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
   ];
 
@@ -277,7 +263,7 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
     tableWidth: contentWidth,
     styles: {
       fontSize: 7.8,
-      cellPadding: { top: 1.8, right: 3, bottom: 1.8, left: 3 },
+      cellPadding: { top: 2.0, right: 3, bottom: 2.0, left: 3 },
       lineColor: [226, 232, 240],
       lineWidth: 0.2,
       overflow: 'ellipsize',
@@ -291,27 +277,31 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
     margin: { left: leftMargin, right: leftMargin },
   });
 
-  // 5. Net Salary Highlight Banner Box
-  const netPayBoxY = (doc as any).lastAutoTable.finalY + 3.5;
+  // 5. Salary Paid / To Pay Highlight Banner Box
+  const netPayBoxY = (doc as any).lastAutoTable.finalY + 4;
 
-  if (isCash) {
-    doc.setFillColor(254, 243, 199); // amber-100
-    doc.setDrawColor(217, 119, 6); // amber-600
-  } else {
+  const netSalaryLabel = salary.status === 'approved' || salary.status === 'disbursed'
+    ? 'SALARY PAID:'
+    : 'SALARY TO PAY:';
+
+  if (salary.status === 'approved') {
     doc.setFillColor(240, 253, 244); // green-50
     doc.setDrawColor(34, 197, 94); // green-500
+  } else {
+    doc.setFillColor(239, 246, 255); // blue-50
+    doc.setDrawColor(59, 130, 246); // blue-500
   }
   doc.setLineWidth(0.6);
   doc.roundedRect(leftMargin, netPayBoxY, contentWidth, 16.5, 2, 2, 'FD');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(isCash ? 146 : 22, isCash ? 64 : 101, isCash ? 14 : 52);
-  doc.text(isCash ? 'NET CASH DISBURSED:' : 'NET TAKE-HOME PAYOUT:', leftMargin + 5, netPayBoxY + 5.5);
+  doc.setFontSize(9.5);
+  doc.setTextColor(salary.status === 'approved' ? 22 : 30, salary.status === 'approved' ? 101 : 58, salary.status === 'approved' ? 52 : 138);
+  doc.text(netSalaryLabel, leftMargin + 5, netPayBoxY + 5.5);
 
-  doc.setFontSize(12);
-  doc.setTextColor(isCash ? 180 : 21, isCash ? 83 : 128, isCash ? 9 : 61);
-  doc.text(`${symbol} ${(salary.netPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, pageWidth - leftMargin - 5, netPayBoxY + 6.5, { align: 'right' });
+  doc.setFontSize(13);
+  doc.setTextColor(salary.status === 'approved' ? 21 : 30, salary.status === 'approved' ? 128 : 58, salary.status === 'approved' ? 61 : 138);
+  doc.text(`${symbol} ${(salary.netPay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, pageWidth - leftMargin - 5, netPayBoxY + 6.8, { align: 'right' });
 
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(7.2);
@@ -319,15 +309,15 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
   doc.text(`Amount in Words: ${salary.netPayInWords}`, leftMargin + 5, netPayBoxY + 11.5);
   doc.text(
     isCash 
-      ? `Disbursed in Physical Currency via Voucher Ref: ${voucherRef}` 
+      ? `Payment Mode: Cash Handover (Voucher Ref: ${voucherRef})` 
       : isUpi
-      ? `Settled via Instant UPI Ref: ${voucherRef}`
-      : `Transferred directly to ${salary.profile.bankName} (A/C: ${salary.profile.accountNumber})`,
+      ? `Payment Mode: UPI Instant (Ref: ${voucherRef})`
+      : `Payment Mode: Direct Bank Transfer (${salary.profile.bankName || 'Bank'} A/C: ${salary.profile.accountNumber || 'Primary'})`,
     leftMargin + 5,
     netPayBoxY + 15
   );
 
-  // 6. Cash Handover Receipt or Compliance Note
+  // 6. Cash Handover Receipt or Settlement Note
   let footerY = netPayBoxY + 19.5;
   if (isCash) {
     doc.setFillColor(255, 251, 235);
@@ -343,7 +333,7 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
     doc.setTextColor(71, 85, 105);
-    doc.text(`Cashier / Treasury: ${settings.companySignatoryName}        |        Received by Employee: ${salary.profile.name} (Signature: _____________________)`, leftMargin + 3, footerY + 7.8);
+    doc.text(`Disbursed By: ${settings.companySignatoryName}        |        Received By: ${salary.profile.name} (Signature: _____________________)`, leftMargin + 3, footerY + 7.8);
     footerY += 13;
   }
 
@@ -351,22 +341,22 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text(`* Employer PF Contribution: ${symbol} ${(salary.employerPF ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (Retirement benefit / not deducted from gross)`, leftMargin, footerY + 2);
-  doc.text('This is a verified computer-generated salary slip and payment advice authenticated under company payroll rules.', leftMargin, footerY + 6);
-  doc.text(`Generated: ${new Date().toLocaleDateString()}  |  Reference ID: ${salary.id}`, leftMargin, footerY + 10);
+  doc.text(`* Employer PF Contribution: ${symbol} ${(salary.employerPF ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (Retirement benefit / not deducted from gross)`, leftMargin, footerY + 3);
+  doc.text('This is a verified computer-generated salary slip and payment advice authenticated under company payroll rules.', leftMargin, footerY + 7);
+  doc.text(`Generated Date: ${new Date().toLocaleDateString()}  |  Reference ID: ${salary.id}`, leftMargin, footerY + 11);
 
   // Signatory Stamp Block
   doc.setDrawColor(203, 213, 225);
-  doc.line(pageWidth - leftMargin - 55, footerY + 7, pageWidth - leftMargin, footerY + 7);
+  doc.line(pageWidth - leftMargin - 55, footerY + 8, pageWidth - leftMargin, footerY + 8);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(30, 41, 59);
-  doc.text(settings.companySignatoryName, pageWidth - leftMargin - 27.5, footerY + 11, { align: 'center' });
+  doc.text(settings.companySignatoryName, pageWidth - leftMargin - 27.5, footerY + 12, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(100, 116, 139);
-  doc.text(settings.companySignatoryTitle, pageWidth - leftMargin - 27.5, footerY + 14.5, { align: 'center' });
-  doc.text(settings.name, pageWidth - leftMargin - 27.5, footerY + 17.5, { align: 'center' });
+  doc.text(settings.companySignatoryTitle, pageWidth - leftMargin - 27.5, footerY + 15.5, { align: 'center' });
+  doc.text(settings.name, pageWidth - leftMargin - 27.5, footerY + 18.5, { align: 'center' });
 
   if (returnBlob) {
     return doc.output('blob');
@@ -374,3 +364,4 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
 
   doc.save(`PaySlip_${salary.profile.empId}_${salary.month}.pdf`);
 }
+

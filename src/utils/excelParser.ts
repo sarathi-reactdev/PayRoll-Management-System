@@ -213,8 +213,8 @@ export function downloadSampleAttendanceTemplate(): void {
     {
       'Employee ID': 'EMP-1001',
       'Employee Name': 'Alexander Wright',
-      'Department': 'Engineering',
-      'Basic Salary': 6000,
+      'Department': 'XML',
+      'Basic Salary': 15000,
       'Days Present': 28,
       'Days Absent': 0,
       'Half Days': 0,
@@ -228,8 +228,8 @@ export function downloadSampleAttendanceTemplate(): void {
     {
       'Employee ID': 'EMP-1002',
       'Employee Name': 'Sophia Chen',
-      'Department': 'Engineering',
-      'Basic Salary': 5500,
+      'Department': 'ePub',
+      'Basic Salary': 15000,
       'Days Present': 26,
       'Days Absent': 1,
       'Half Days': 2,
@@ -238,13 +238,13 @@ export function downloadSampleAttendanceTemplate(): void {
       'Overtime Hours': 18.5,
       'Holidays Worked': 0,
       'Late Marks': 4,
-      'Remarks': 'Weekend deployment overtime'
+      'Remarks': 'ePub release overtime'
     },
     {
       'Employee ID': 'EMP-1003',
       'Employee Name': 'Marcus Holloway',
-      'Department': 'Product & Design',
-      'Basic Salary': 5000,
+      'Department': 'PPT',
+      'Basic Salary': 15000,
       'Days Present': 29,
       'Days Absent': 0,
       'Half Days': 0,
@@ -253,13 +253,13 @@ export function downloadSampleAttendanceTemplate(): void {
       'Overtime Hours': 5,
       'Holidays Worked': 0,
       'Late Marks': 1,
-      'Remarks': 'Design review sprint'
+      'Remarks': 'PPT master slide templates'
     },
     {
       'Employee ID': 'EMP-1004',
       'Employee Name': 'Amara Patel',
-      'Department': 'Sales & Marketing',
-      'Basic Salary': 4200,
+      'Department': 'Word',
+      'Basic Salary': 15000,
       'Days Present': 27,
       'Days Absent': 0,
       'Half Days': 0,
@@ -273,8 +273,8 @@ export function downloadSampleAttendanceTemplate(): void {
     {
       'Employee ID': 'EMP-1005',
       'Employee Name': 'David Rodriguez',
-      'Department': 'Operations & Support',
-      'Basic Salary': 3800,
+      'Department': 'XML',
+      'Basic Salary': 15000,
       'Days Present': 22,
       'Days Absent': 0,
       'Half Days': 0,

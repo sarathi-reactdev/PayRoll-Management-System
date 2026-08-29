@@ -2,15 +2,15 @@ import React from 'react';
 import { 
   DollarSign, 
   Users, 
-  ArrowUpRight, 
   FileUp, 
   CheckCircle2, 
   FileSpreadsheet, 
   Building, 
   Send, 
   Download,
-  CreditCard,
-  Lock
+  RotateCcw,
+  Clock,
+  MessageCircle
 } from 'lucide-react';
 import { SalaryBreakdown, CompanySettings, PayrollStatus, UserRole } from '../types/payroll';
 
@@ -46,23 +46,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const totalGross = salaries.reduce((acc, s) => acc + (s.grossEarnings ?? 0), 0);
   const totalEmployees = salaries.length;
 
-  // Status Badge Helper
-  const getStatusBadge = (status: PayrollStatus) => {
-    switch (status) {
-      case 'draft':
-        return { label: 'Draft', bg: 'bg-amber-100 text-amber-800 border-amber-300' };
-      case 'under_review':
-        return { label: 'Under Review', bg: 'bg-blue-100 text-blue-800 border-blue-300' };
-      case 'approved':
-        return { label: 'Approved', bg: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
-      case 'disbursed':
-        return { label: 'Disbursed', bg: 'bg-purple-100 text-purple-800 border-purple-300' };
-      case 'locked':
-        return { label: 'Locked & Archived', bg: 'bg-slate-200 text-slate-800 border-slate-400' };
-    }
-  };
-
-  const statusBadge = getStatusBadge(payrollStatus);
+  const isApproved = payrollStatus === 'approved';
 
   return (
     <div className="space-y-6">
@@ -74,9 +58,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
               Payroll Processing Command Center
             </h1>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusBadge.bg}`}>
-              {statusBadge.label}
-            </span>
+            {isApproved ? (
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-100 text-emerald-800 border-emerald-300">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Approved</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-100 text-amber-800 border-amber-300">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Pending Approval</span>
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-500 mt-1">
             Period: <span className="font-semibold text-slate-700">{salaries[0]?.periodLabel || 'August 2026'}</span> • {totalEmployees} Active Employees Ingested • Currency: {settings.currency} ({sym})
@@ -85,7 +77,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
         {/* Workflow Action Buttons */}
         {currentRole !== 'employee' && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Step 1: Ingest Attendance */}
             <button
               id="btn-upload-attendance"
               onClick={onOpenUploadModal}
@@ -95,48 +88,30 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <span>Ingest Attendance Excel</span>
             </button>
 
-            {payrollStatus === 'draft' && (
-              <button
-                id="btn-submit-review"
-                onClick={() => onUpdatePayrollStatus('under_review')}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-              >
-                <ArrowUpRight className="w-4 h-4" />
-                <span>Submit for Review</span>
-              </button>
-            )}
-
-            {payrollStatus === 'under_review' && (currentRole === 'super_admin' || currentRole === 'hr_manager') && (
-              <button
-                id="btn-approve-payroll"
-                onClick={() => onUpdatePayrollStatus('approved')}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Approve Payroll Run</span>
-              </button>
-            )}
-
-            {payrollStatus === 'approved' && (
-              <button
-                id="btn-mark-disbursed"
-                onClick={() => onUpdatePayrollStatus('disbursed')}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Mark Disbursed</span>
-              </button>
-            )}
-
-            {payrollStatus === 'disbursed' && (
-              <button
-                id="btn-lock-cycle"
-                onClick={() => onUpdatePayrollStatus('locked')}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-              >
-                <Lock className="w-4 h-4" />
-                <span>Lock Cycle</span>
-              </button>
+            {/* Step 2: One-Click Approve / Reopen */}
+            {!isApproved ? (
+              (currentRole === 'super_admin' || currentRole === 'hr_manager' || currentRole === 'dept_head') && (
+                <button
+                  id="btn-approve-payroll"
+                  onClick={() => onUpdatePayrollStatus('approved')}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Approve Payroll</span>
+                </button>
+              )
+            ) : (
+              (currentRole === 'super_admin' || currentRole === 'hr_manager') && (
+                <button
+                  id="btn-reopen-payroll"
+                  onClick={() => onUpdatePayrollStatus('draft')}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold shadow-xs transition cursor-pointer"
+                  title="Reopen payroll cycle to make adjustments"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Reopen / Edit</span>
+                </button>
+              )
             )}
           </div>
         )}
@@ -220,12 +195,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </button>
 
             <button
-              id="btn-email-dispatch"
+              id="btn-dispatch-payslips"
               onClick={onOpenEmailModal}
-              className="inline-flex items-center space-x-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium shadow-2xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
             >
-              <Send className="w-3.5 h-3.5 text-blue-600" />
-              <span>Email Pay Slips</span>
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp / Email Dispatch</span>
             </button>
           </div>
         </div>

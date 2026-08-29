@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Edit3, CheckCircle2, ShieldAlert, Calendar, DollarSign, Clock, Banknote, Landmark, Smartphone, FileText } from 'lucide-react';
 import { SalaryBreakdown, CompanySettings, AttendanceRecord, PaymentMethod } from '../types/payroll';
+import { calculateSalaryBreakdown } from '../utils/payrollCalculator';
 
 interface SalaryAdjustmentModalProps {
   isOpen: boolean;
@@ -24,49 +25,91 @@ export const SalaryAdjustmentModal: React.FC<SalaryAdjustmentModalProps> = ({
   onClose,
   onSaveAdjustment,
 }) => {
-  if (!isOpen || !salary) return null;
-
   const sym = settings.currencySymbol || '$';
-  const totalMonthDays = salary.attendance.totalMonthDays || settings.payCycleDayCount || 30;
+  const totalMonthDays = salary?.attendance?.totalMonthDays || settings.payCycleDayCount || 30;
 
   // Attendance states
-  const [daysPresent, setDaysPresent] = useState<number>(salary.attendance.daysPresent ?? totalMonthDays);
-  const [daysAbsent, setDaysAbsent] = useState<number>(salary.attendance.daysAbsent ?? 0);
-  const [paidLeaves, setPaidLeaves] = useState<number>(salary.attendance.paidLeaves ?? 0);
-  const [unpaidLeaves, setUnpaidLeaves] = useState<number>(salary.attendance.unpaidLeaves ?? 0);
-  const [overtimeHours, setOvertimeHours] = useState<number>(salary.attendance.overtimeHours ?? 0);
+  const [daysPresent, setDaysPresent] = useState<number>(() => salary?.attendance?.daysPresent ?? totalMonthDays);
+  const [daysAbsent, setDaysAbsent] = useState<number>(() => salary?.attendance?.daysAbsent ?? 0);
+  const [paidLeaves, setPaidLeaves] = useState<number>(() => salary?.attendance?.paidLeaves ?? 0);
+  const [unpaidLeaves, setUnpaidLeaves] = useState<number>(() => salary?.attendance?.unpaidLeaves ?? 0);
+  const [overtimeHours, setOvertimeHours] = useState<number>(() => salary?.attendance?.overtimeHours ?? 0);
 
   // Financial adjustments
-  const [bonus, setBonus] = useState<number>(salary.performanceBonus || 0);
-  const [reimbursements, setReimbursements] = useState<number>(salary.reimbursements || 0);
-  const [otherDeductions, setOtherDeductions] = useState<number>(salary.otherDeductions || 0);
-  const [overtimePay, setOvertimePay] = useState<number>(salary.overtimePay || 0);
+  const [bonus, setBonus] = useState<number>(() => salary?.performanceBonus || 0);
+  const [reimbursements, setReimbursements] = useState<number>(() => salary?.reimbursements || 0);
+  const [otherDeductions, setOtherDeductions] = useState<number>(() => salary?.otherDeductions || 0);
+  const [overtimePay, setOvertimePay] = useState<number>(() => salary?.overtimePay || 0);
   
   // Payment mode states
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(salary.paymentMethod || 'bank_transfer');
-  const [paymentReference, setPaymentReference] = useState<string>(
-    salary.paymentReference || 
-    (salary.paymentMethod === 'cash' 
-      ? `CASH-VCHR-${salary.month.replace('-', '')}-${salary.empId.replace(/[^a-zA-Z0-9]/g, '')}`
-      : `TXN-${salary.month.replace('-', '')}-${salary.empId.replace(/[^a-zA-Z0-9]/g, '')}`)
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(() => salary?.paymentMethod || 'bank_transfer');
+  const [paymentReference, setPaymentReference] = useState<string>(() => 
+    salary?.paymentReference || 
+    (salary?.paymentMethod === 'cash' 
+      ? `CASH-VCHR-${salary?.month?.replace('-', '') || ''}-${salary?.empId?.replace(/[^a-zA-Z0-9]/g, '') || ''}`
+      : `TXN-${salary?.month?.replace('-', '') || ''}-${salary?.empId?.replace(/[^a-zA-Z0-9]/g, '') || ''}`)
   );
 
   const [reason, setReason] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  // Dynamically calculate payable days & proration
-  const payableDays = Math.min(totalMonthDays, Math.max(0, daysPresent + paidLeaves));
-  const lossOfPayDays = Math.max(0, totalMonthDays - payableDays);
-  const perDaySalary = salary.basicPay > 0 && totalMonthDays > 0 ? salary.basicPay / totalMonthDays : 0;
-  const computedLopDeduction = Math.round(perDaySalary * lossOfPayDays * 100) / 100;
+  React.useEffect(() => {
+    if (salary && isOpen) {
+      const monthDays = salary.attendance.totalMonthDays || settings.payCycleDayCount || 30;
+      setDaysPresent(salary.attendance.daysPresent ?? monthDays);
+      setDaysAbsent(salary.attendance.daysAbsent ?? 0);
+      setPaidLeaves(salary.attendance.paidLeaves ?? 0);
+      setUnpaidLeaves(salary.attendance.unpaidLeaves ?? 0);
+      setOvertimeHours(salary.attendance.overtimeHours ?? 0);
+      setBonus(salary.performanceBonus || 0);
+      setReimbursements(salary.reimbursements || 0);
+      setOtherDeductions(salary.otherDeductions || 0);
+      setOvertimePay(salary.overtimePay || 0);
+      setPaymentMethod(salary.paymentMethod || 'bank_transfer');
+      setPaymentReference(
+        salary.paymentReference || 
+        (salary.paymentMethod === 'cash' 
+          ? `CASH-VCHR-${salary.month.replace('-', '')}-${salary.empId.replace(/[^a-zA-Z0-9]/g, '')}`
+          : `TXN-${salary.month.replace('-', '')}-${salary.empId.replace(/[^a-zA-Z0-9]/g, '')}`)
+      );
+      setReason('');
+      setError('');
+    }
+  }, [salary, isOpen, settings.payCycleDayCount]);
 
-  // Recompute estimated net pay
+  if (!isOpen || !salary) return null;
+
+  // Construct updated attendance snapshot
+  const updatedAttendanceSnapshot: AttendanceRecord = {
+    ...salary.attendance,
+    totalMonthDays,
+    daysPresent,
+    daysAbsent,
+    paidLeaves,
+    unpaidLeaves: Math.max(0, totalMonthDays - (daysPresent + paidLeaves)),
+    overtimeHours,
+  };
+
+  // Dynamically recalculate complete salary breakdown from base profile & updated attendance
+  const baseBreakdown = calculateSalaryBreakdown(
+    salary.profile,
+    updatedAttendanceSnapshot,
+    settings,
+    salary.month,
+    salary.periodLabel
+  );
+
+  const payableDays = baseBreakdown.payableDays;
+  const lossOfPayDays = baseBreakdown.lossOfPayDays;
+  const computedLopDeduction = baseBreakdown.lossOfPayDeduction;
+
+  // Recompute estimated gross and deductions factoring in manual bonus, overtime adjustment, and other deductions
   const estimatedGross = Math.round(
-    (salary.basicPay + salary.hra + salary.conveyanceAllowance + salary.medicalAllowance + salary.specialAllowance + overtimePay + salary.holidayWorkPay + bonus + reimbursements) * 100
+    (baseBreakdown.basicPay + baseBreakdown.hra + baseBreakdown.conveyanceAllowance + baseBreakdown.medicalAllowance + baseBreakdown.specialAllowance + overtimePay + baseBreakdown.holidayWorkPay + bonus + reimbursements) * 100
   ) / 100;
 
   const estimatedTotalDeductions = Math.round(
-    (salary.providentFund + salary.esi + salary.professionalTax + salary.incomeTaxTDS + salary.lateDeduction + computedLopDeduction + otherDeductions) * 100
+    (baseBreakdown.providentFund + baseBreakdown.professionalTax + baseBreakdown.lateDeduction + otherDeductions) * 100
   ) / 100;
 
   const estimatedNetPay = Math.max(0, Math.round((estimatedGross - estimatedTotalDeductions) * 100) / 100);
@@ -86,10 +129,20 @@ export const SalaryAdjustmentModal: React.FC<SalaryAdjustmentModalProps> = ({
     };
 
     const updated: SalaryBreakdown = {
+      ...baseBreakdown,
       ...salary,
       payableDays,
       lossOfPayDays,
       lossOfPayDeduction: computedLopDeduction,
+      basicPay: baseBreakdown.basicPay,
+      hra: baseBreakdown.hra,
+      conveyanceAllowance: baseBreakdown.conveyanceAllowance,
+      medicalAllowance: baseBreakdown.medicalAllowance,
+      specialAllowance: baseBreakdown.specialAllowance,
+      providentFund: baseBreakdown.providentFund,
+      employerPF: baseBreakdown.employerPF,
+      professionalTax: baseBreakdown.professionalTax,
+      lateDeduction: baseBreakdown.lateDeduction,
       performanceBonus: bonus,
       reimbursements,
       otherDeductions,

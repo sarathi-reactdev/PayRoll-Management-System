@@ -24,9 +24,9 @@ export const ArchitectureDocsModal: React.FC<ArchitectureDocsModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState<'architecture' | 'schema' | 'stack' | 'scaling' | 'roadmap'>('architecture');
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">

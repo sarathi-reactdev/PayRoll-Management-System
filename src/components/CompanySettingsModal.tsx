@@ -32,8 +32,6 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
   onClose,
   onSaveSettings,
 }) => {
-  if (!isOpen) return null;
-
   const [formData, setFormData] = useState<CompanySettings>({ 
     ...settings,
     appTitle: settings.appTitle || 'PayMaster Pro',
@@ -42,6 +40,19 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
   const [activeTab, setActiveTab] = useState<'profile' | 'rules'>('profile');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        ...settings,
+        appTitle: settings.appTitle || 'PayMaster Pro',
+        brandSubTitle: settings.brandSubTitle || 'Enterprise Payroll & HRMS',
+      });
+      setSavedSuccess(false);
+    }
+  }, [isOpen, settings]);
+
+  if (!isOpen) return null;
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -405,36 +416,6 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                     className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <p className="text-[10px] text-slate-400 mt-0.5">Standard statutory 12% of Basic Pay</p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Health Insurance / ESI %
-                  </label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="5"
-                    value={formData.esiPercentage}
-                    onChange={(e) => setFormData({ ...formData, esiPercentage: parseFloat(e.target.value) || 0.75 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">0.75% of Gross when under wage threshold</p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    ESI Gross Wage Threshold ({formData.currencySymbol})
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="500"
-                    value={formData.esiWageThreshold}
-                    onChange={(e) => setFormData({ ...formData, esiWageThreshold: parseFloat(e.target.value) || 3000 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
                 </div>
 
                 <div>

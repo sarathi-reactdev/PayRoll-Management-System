@@ -120,16 +120,15 @@ export function calculateSalaryBreakdown(
 
   // 2. Payable Days calculation
   const halfDaysValue = (attendance.halfDays || 0) * 0.5;
-  const presentDays = attendance.daysPresent ?? 0;
-  const paidLeaves = attendance.paidLeaves ?? 0;
-  const unpaidLeaves = attendance.unpaidLeaves ?? 0;
-  const holidaysWorked = attendance.holidaysWorked ?? 0;
+  const presentDays = attendance.daysPresent !== undefined ? attendance.daysPresent : totalMonthDays;
+  const paidLeaves = attendance.paidLeaves || 0;
+  const unpaidLeaves = attendance.unpaidLeaves || 0;
+  const holidaysWorked = attendance.holidaysWorked || 0;
 
-  // If explicit attendance is entered (e.g., from Excel or manual input), respect the recorded present + paid days
+  // Actual payable days: days present + approved paid leaves + half-day fractions
   const rawPayableDays = presentDays + paidLeaves + halfDaysValue;
-  // If user entered attendance that exceeds effectiveMaxDays, prioritize user's entered attendance up to totalMonthDays
-  const maxPossibleDays = Math.max(effectiveMaxDays, Math.min(totalMonthDays, rawPayableDays));
-  const payableDays = Math.min(totalMonthDays, Math.max(0, rawPayableDays > 0 ? rawPayableDays : Math.min(effectiveMaxDays, totalMonthDays)));
+  // Bound strictly between 0 and totalMonthDays
+  const payableDays = Math.min(totalMonthDays, Math.max(0, rawPayableDays));
   const lossOfPayDays = Math.max(0, totalMonthDays - payableDays);
 
   const prorationFactor = totalMonthDays > 0 ? (payableDays / totalMonthDays) : 1;
@@ -194,17 +193,12 @@ export function calculateSalaryBreakdown(
   providentFund = Math.round(providentFund * 100) / 100;
   const employerPF = providentFund; // Equal employer contribution
 
-  // ESI / Health insurance (0.75% of Gross if within threshold)
-  let esi = 0;
-  if (grossEarnings <= settings.esiWageThreshold && settings.esiPercentage > 0) {
-    esi = Math.round((grossEarnings * (settings.esiPercentage / 100)) * 100) / 100;
-  }
+  // Health insurance and Income tax TDS excluded per company specification
+  const esi = 0;
+  const incomeTaxTDS = 0;
 
   // Professional Tax (PT)
-  const professionalTax = grossEarnings > 1500 ? settings.ptSlabAmount : 0;
-
-  // Income Tax (TDS)
-  const incomeTaxTDS = calculateEstimatedTDS(grossEarnings);
+  const professionalTax = grossEarnings > 1500 ? (settings.ptSlabAmount || 200) : 0;
 
   // Late arrival penalty
   let lateDeduction = 0;
@@ -218,9 +212,9 @@ export function calculateSalaryBreakdown(
 
   const otherDeductions = 0;
 
-  // Total Deductions
+  // Total Deductions (LOP is already prorated from Gross Earnings, so it is NOT subtracted twice)
   const totalDeductions = Math.round(
-    (providentFund + esi + professionalTax + incomeTaxTDS + lateDeduction + lossOfPayDeduction + otherDeductions) * 100
+    (providentFund + esi + professionalTax + incomeTaxTDS + lateDeduction + otherDeductions) * 100
   ) / 100;
 
   // 6. Net Pay
