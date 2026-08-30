@@ -29,6 +29,10 @@ export interface CompanySettings {
   ptSlabAmount: number; // Professional Tax flat/slab
   companySignatoryName: string;
   companySignatoryTitle: string;
+  signatureUrl?: string; // Base64 data URL or image URL
+  signatureType?: 'upload' | 'draw' | 'preset';
+  showDigitalSignature?: boolean;
+  signatureTimestamp?: boolean;
 }
 
 export interface EmployeeProfile {

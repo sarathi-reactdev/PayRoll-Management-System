@@ -337,26 +337,66 @@ export function generatePaySlipPDF(salary: SalaryBreakdown, settings: CompanySet
     footerY += 13;
   }
 
-  // 7. Footer, Employer PF Note & Authorized Signatory
+  // 7. Footer, Employer PF Note & Authorized Signatory Block
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text(`* Employer PF Contribution: ${symbol} ${(salary.employerPF ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (Retirement benefit / not deducted from gross)`, leftMargin, footerY + 3);
-  doc.text('This is a verified computer-generated salary slip and payment advice authenticated under company payroll rules.', leftMargin, footerY + 7);
-  doc.text(`Generated Date: ${new Date().toLocaleDateString()}  |  Reference ID: ${salary.id}`, leftMargin, footerY + 11);
+  doc.text(`* Employer PF Contribution: ${symbol} ${(salary.employerPF ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (Retirement benefit / not deducted from gross)`, leftMargin, footerY + 2.5);
+  doc.text('This is a verified computer-generated salary slip and payment advice authenticated under company payroll rules.', leftMargin, footerY + 6.5);
+  doc.text(`Generated Date: ${new Date().toLocaleDateString()}  |  Reference ID: ${salary.id}`, leftMargin, footerY + 10.5);
 
-  // Signatory Stamp Block
+  // Digital Authentication Security Mark on bottom left
+  if (settings.showDigitalSignature !== false) {
+    doc.setFillColor(240, 253, 244); // light emerald
+    doc.setDrawColor(34, 197, 94); // emerald-500
+    doc.setLineWidth(0.2);
+    doc.roundedRect(leftMargin, footerY + 13, 85, 7, 1, 1, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.2);
+    doc.setTextColor(22, 101, 52);
+    doc.text(`[✔ DIGITALLY AUTHENTICATED & AUDITED]`, leftMargin + 2.5, footerY + 16.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Signatory: ${settings.companySignatoryName} (${settings.companySignatoryTitle})`, leftMargin + 2.5, footerY + 19);
+  }
+
+  // Signatory Stamp & Digital Signature Block on bottom right
+  const sigBoxX = pageWidth - leftMargin - 56;
+  const sigBoxWidth = 56;
+
+  // If user provided a signature image / drawn signature Data URL
+  if (settings.signatureUrl && settings.showDigitalSignature !== false) {
+    try {
+      doc.addImage(settings.signatureUrl, 'PNG', sigBoxX + 8, footerY - 5, 40, 12, undefined, 'FAST');
+    } catch (e) {
+      // Fallback cursive if image load fails
+      doc.setFont('times', 'italic');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 58, 138);
+      doc.text(settings.companySignatoryName, sigBoxX + sigBoxWidth / 2, footerY + 5.5, { align: 'center' });
+    }
+  } else if (settings.showDigitalSignature !== false) {
+    // Stylized default digital cursive signature
+    doc.setFont('times', 'italic');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 58, 138);
+    doc.text(settings.companySignatoryName, sigBoxX + sigBoxWidth / 2, footerY + 5.5, { align: 'center' });
+  }
+
   doc.setDrawColor(203, 213, 225);
-  doc.line(pageWidth - leftMargin - 55, footerY + 8, pageWidth - leftMargin, footerY + 8);
+  doc.setLineWidth(0.3);
+  doc.line(sigBoxX, footerY + 8, sigBoxX + sigBoxWidth, footerY + 8);
+  
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(30, 41, 59);
-  doc.text(settings.companySignatoryName, pageWidth - leftMargin - 27.5, footerY + 12, { align: 'center' });
+  doc.text(settings.companySignatoryName, sigBoxX + sigBoxWidth / 2, footerY + 12, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(100, 116, 139);
-  doc.text(settings.companySignatoryTitle, pageWidth - leftMargin - 27.5, footerY + 15.5, { align: 'center' });
-  doc.text(settings.name, pageWidth - leftMargin - 27.5, footerY + 18.5, { align: 'center' });
+  doc.text(settings.companySignatoryTitle, sigBoxX + sigBoxWidth / 2, footerY + 15.5, { align: 'center' });
+  doc.text(settings.name, sigBoxX + sigBoxWidth / 2, footerY + 18.5, { align: 'center' });
 
   if (returnBlob) {
     return doc.output('blob');

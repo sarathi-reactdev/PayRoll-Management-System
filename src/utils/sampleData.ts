@@ -23,6 +23,9 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   ptSlabAmount: 200,
   companySignatoryName: 'Authorized Signatory',
   companySignatoryTitle: 'Head of Operations & Finance',
+  showDigitalSignature: true,
+  signatureTimestamp: true,
+  signatureType: 'preset',
 };
 
 export const INITIAL_EMPLOYEES: EmployeeProfile[] = [

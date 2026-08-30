@@ -112,7 +112,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
   const selectedList = filteredSalaries.filter(s => selectedIds.has(s.id));
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+    <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
       
       {/* Search & Filter Header Strip */}
       <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-slate-50/70">
@@ -126,14 +126,14 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
             placeholder="Search by Employee Name, ID, Department, or Designation..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Department Filter */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs">
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2.5 py-1.5 rounded-md text-xs">
             <span className="text-slate-500 font-medium">Dept:</span>
             <select
               id="filter-dept-select"
@@ -149,7 +149,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
           </div>
 
           {/* Salary Structure Filter */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs">
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2.5 py-1.5 rounded-md text-xs">
             <span className="text-slate-500 font-medium">Type:</span>
             <select
               id="filter-structure-select"
@@ -166,7 +166,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
           </div>
 
           {/* Payment Mode Filter (Bank vs Cash) */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs">
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2.5 py-1.5 rounded-md text-xs">
             <span className="text-slate-500 font-medium">Payment Mode:</span>
             <select
               id="filter-payment-mode-select"
@@ -187,7 +187,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
             <button
               id="btn-grid-add-employee"
               onClick={onOpenAddEmployee}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Add Employee</span>
@@ -199,7 +199,7 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
             <button
               id="btn-grid-clear-all"
               onClick={() => setIsClearAllOpen(true)}
-              className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs transition cursor-pointer"
               title="Clear all mock/sample employees to start fresh with your own team"
             >
               <Trash2 className="w-3.5 h-3.5" />

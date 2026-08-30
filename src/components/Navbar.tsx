@@ -54,11 +54,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <img
                 src={companySettings.logoUrl}
                 alt="Logo"
-                className="w-10 h-10 rounded-xl object-contain bg-white border border-slate-200/80 p-1 shadow-xs transition-transform hover:scale-105"
+                className="w-10 h-10 rounded-md object-contain bg-white border border-slate-200/80 p-1 shadow-xs transition-transform hover:scale-105"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-xs shadow-blue-200">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-md flex items-center justify-center text-white font-bold text-base shadow-xs shadow-blue-200">
                 {(companySettings.appTitle || 'P').charAt(0).toUpperCase()}
               </div>
             )}
@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-bold text-lg tracking-tight text-slate-900">
                   {companySettings.appTitle || 'PayMaster Pro'}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
                   {companySettings.brandSubTitle || 'Enterprise'}
                 </span>
               </div>
@@ -79,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation: Month & Template */}
           <div className="hidden md:flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600">
+            <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md text-xs font-medium text-slate-600">
               <Calendar className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-slate-400">Pay Cycle:</span>
               <input
@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-navbar-employees"
                 onClick={onOpenEmployeeDirectory}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-800 transition cursor-pointer shadow-2xs"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-800 transition cursor-pointer shadow-2xs"
                 title="Manage Employee Directory (View, Search, Edit Mobile, Email, DOB & Salary)"
               >
                 <Users className="w-3.5 h-3.5 text-blue-600" />
@@ -115,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-navbar-history"
                 onClick={onOpenHistoricalArchive}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-indigo-800 transition cursor-pointer shadow-2xs"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-indigo-800 transition cursor-pointer shadow-2xs"
                 title="View and manage employee past payslip records and archives"
               >
                 <History className="w-3.5 h-3.5 text-indigo-600" />
@@ -129,7 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Controls: Role Switcher & Action Tools */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Role Switcher */}
-            <div className="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+            <div className="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-200 text-xs">
               <UserCheck className="w-3.5 h-3.5 text-slate-500" />
               <select
                 id="user-role-select"
@@ -147,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-company-settings"
                 onClick={onOpenSettings}
-                className="p-2 rounded-lg bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition shadow-2xs cursor-pointer"
+                className="p-2 rounded-md bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition shadow-2xs cursor-pointer"
                 title="Payroll & Company Configuration"
               >
                 <Settings className="w-4 h-4 text-slate-500 hover:text-slate-800" />

@@ -81,14 +81,14 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* Action Header */}
         <div className="px-6 py-3.5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between no-print">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
             <span className="text-sm font-bold tracking-tight">Verified Employee Pay Slip & Payment Advice</span>
-            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded uppercase tracking-wider">
               {salary.periodLabel}
             </span>
           </div>
@@ -96,7 +96,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => openWhatsAppPayslip(salary, settings)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
               title="Share payslip summary via WhatsApp"
             >
               <MessageCircle className="w-3.5 h-3.5" />
@@ -105,7 +105,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
             <button
               onClick={handlePrint}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition cursor-pointer"
               title="Print document"
             >
               <Printer className="w-3.5 h-3.5 text-slate-400" />
@@ -114,7 +114,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
             <button
               onClick={() => generatePaySlipPDF(salary, settings)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
               title="Download official PDF copy"
             >
               <Download className="w-3.5 h-3.5" />
@@ -123,7 +123,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              className="text-slate-400 hover:text-white p-1.5 rounded hover:bg-slate-800 transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -134,7 +134,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
         <div className="p-8 overflow-y-auto flex-1 bg-slate-50/40 print:p-0 print:bg-white text-slate-800 text-xs space-y-5" id="printable-payslip">
           
           {/* Main Paper Frame */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-5">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-xs space-y-5">
             
             {/* 1. Header: Company Brand & Pay Slip Title */}
             <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -144,11 +144,11 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                     <img 
                       src={settings.logoUrl} 
                       alt="Company Logo" 
-                      className="w-11 h-11 rounded-xl object-contain bg-white border border-slate-200/90 p-1 shadow-2xs"
+                      className="w-11 h-11 rounded-md object-contain bg-white border border-slate-200/90 p-1 shadow-2xs"
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                    <div className="w-10 h-10 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                       <Building2 className="w-5 h-5" />
                     </div>
                   )}
@@ -170,12 +170,12 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
               </div>
 
               <div className="text-right sm:self-center space-y-1.5">
-                <div className="inline-block bg-blue-900 text-white font-bold text-xs px-3 py-1 rounded-md tracking-wider">
+                <div className="inline-block bg-blue-900 text-white font-bold text-xs px-3 py-1 rounded tracking-wider">
                   PAYSLIP FOR {salary.periodLabel.toUpperCase()}
                 </div>
                 
                 <div className="flex items-center justify-end space-x-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadge.bg}`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.bg}`}>
                     {statusBadge.label}
                   </span>
                 </div>
@@ -187,7 +187,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
             </div>
 
             {/* 2. Employee Demographic Information Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-md border border-slate-200">
               <div>
                 <div className="text-[10px] uppercase font-bold text-slate-400">Employee ID</div>
                 <div className="text-xs font-extrabold text-slate-900 mt-0.5">{salary.profile.empId}</div>
@@ -267,7 +267,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
             </div>
 
             {/* 3. Attendance & Payable Matrix Banner */}
-            <div className="bg-slate-100/90 rounded-lg p-2.5 border border-slate-200 grid grid-cols-4 sm:grid-cols-7 gap-2 text-center text-xs">
+            <div className="bg-slate-100/90 rounded-md p-2.5 border border-slate-200 grid grid-cols-4 sm:grid-cols-7 gap-2 text-center text-xs">
               <div className="border-r border-slate-200 last:border-0 pr-1">
                 <span className="text-[10px] text-slate-500 block">Total Days</span>
                 <span className="font-bold text-slate-900">{salary.totalDays}</span>
@@ -302,7 +302,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               
               {/* Earnings Table */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between">
+              <div className="border border-slate-200 rounded-md overflow-hidden flex flex-col justify-between">
                 <div>
                   <div className="bg-blue-900 text-white font-bold px-3.5 py-2 flex items-center justify-between text-xs">
                     <span>EARNINGS COMPONENT</span>
@@ -342,7 +342,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
               </div>
 
               {/* Deductions Table */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between">
+              <div className="border border-slate-200 rounded-md overflow-hidden flex flex-col justify-between">
                 <div>
                   <div className="bg-rose-900 text-white font-bold px-3.5 py-2 flex items-center justify-between text-xs">
                     <span>DEDUCTIONS COMPONENT</span>
@@ -384,7 +384,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
             </div>
 
             {/* 5. Salary Paid / To Pay Highlight Banner Box */}
-            <div className={`border-2 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs ${
+            <div className={`border-2 rounded-md p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs ${
               salary.status === 'disbursed' ? 'bg-emerald-50 border-emerald-500/80' : 'bg-blue-50/90 border-blue-500/80'
             }`}>
               <div>
@@ -420,7 +420,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
 
             {/* 6. Cash Acknowledgment Receipt / Bank Settlement Note */}
             {isCash && (
-              <div className="bg-amber-50/60 border border-amber-300 rounded-xl p-3 text-[11px] text-amber-950 space-y-2">
+              <div className="bg-amber-50/60 border border-amber-300 rounded-md p-3 text-[11px] text-amber-950 space-y-2">
                 <div className="font-bold flex items-center space-x-1.5">
                   <Award className="w-4 h-4 text-amber-700" />
                   <span>CASH DISBURSEMENT RECEIPT & HANDOVER ACKNOWLEDGMENT</span>
@@ -448,12 +448,36 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   System Generated Electronic Pay Advice • Digitally authenticated under Payroll Compliance Act
                 </p>
+                {settings.showDigitalSignature !== false && (
+                  <div className="mt-2 inline-flex items-center space-x-1.5 px-2 py-0.5 bg-emerald-50 border border-emerald-300 rounded text-[10px] text-emerald-800 font-semibold">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>Digitally Certified & Authenticated by {settings.companySignatoryName}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="text-center sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0">
-                <div className="font-bold text-slate-900">{settings.companySignatoryName}</div>
-                <div className="text-[10px] text-slate-500">{settings.companySignatoryTitle}</div>
-                <div className="text-[10px] text-slate-400">{settings.name}</div>
+              <div className="text-center sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 flex flex-col items-center sm:items-end">
+                {/* Render Signature */}
+                {settings.signatureUrl && settings.showDigitalSignature !== false ? (
+                  <div className="mb-1">
+                    <img 
+                      src={settings.signatureUrl} 
+                      alt="Digital Signature" 
+                      className="h-10 max-w-[140px] object-contain"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                ) : settings.showDigitalSignature !== false ? (
+                  <div className="font-serif italic text-blue-900 text-base mb-1 tracking-wide">
+                    {settings.companySignatoryName}
+                  </div>
+                ) : null}
+
+                <div className="border-t border-slate-300 pt-1 w-44 text-center">
+                  <div className="font-bold text-slate-900">{settings.companySignatoryName}</div>
+                  <div className="text-[10px] text-slate-500">{settings.companySignatoryTitle}</div>
+                  <div className="text-[10px] text-slate-400">{settings.name}</div>
+                </div>
               </div>
             </div>
 
