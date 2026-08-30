@@ -313,12 +313,12 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   {/* Logo Preview */}
-                  <div className="w-16 h-16 rounded border border-slate-300 bg-white p-1 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
+                  <div className="w-16 h-16 rounded-xl border border-slate-300 bg-white p-1.5 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
                     {formData.logoUrl ? (
                       <img 
                         src={formData.logoUrl} 
                         alt="Company Logo" 
-                        className="w-full h-full object-contain" 
+                        className="w-full h-full object-contain rounded-lg" 
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     ) : (

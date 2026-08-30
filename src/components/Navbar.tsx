@@ -54,11 +54,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <img
                 src={companySettings.logoUrl}
                 alt="Logo"
-                className="w-10 h-10 rounded-md object-contain bg-white border border-slate-200/80 p-1 shadow-xs transition-transform hover:scale-105"
+                className="w-10 h-10 rounded-xl object-contain bg-white border border-slate-200/80 p-1 shadow-xs transition-transform hover:scale-105"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-md flex items-center justify-center text-white font-bold text-base shadow-xs shadow-blue-200">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-xs shadow-blue-200">
                 {(companySettings.appTitle || 'P').charAt(0).toUpperCase()}
               </div>
             )}

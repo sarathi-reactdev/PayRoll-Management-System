@@ -8,7 +8,7 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-  "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "electron:dev": "concurrently \"vite\" \"wait-on tcp:3000 && electron .\"",
     "electron:build": "vite build && electron-builder --win",
@@ -39,6 +39,8 @@
     "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
@@ -64,7 +66,6 @@
       "icon": "public/icon.ico",
       "target": [
         "nsis"
-        
       ]
     },
     "nsis": {
