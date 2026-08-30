@@ -323,7 +323,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 <select
                   value={formData.gender || ''}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  className="w-full font-medium bg-slate-50 border border-slate-300 rounded-md p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
@@ -331,17 +331,6 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                   <option value="Other">Other</option>
                   <option value="Prefer not to say">Prefer not to say</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1">Avatar Image URL (Optional)</label>
-                <input
-                  type="url"
-                  value={formData.avatarUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
               </div>
             </div>
           </div>
@@ -597,17 +586,6 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                     value={formData.routingOrIfsc}
                     onChange={(e) => setFormData({ ...formData, routingOrIfsc: e.target.value })}
                     placeholder="e.g. CHASUS33 or HDFC0001234"
-                    className="w-full font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Tax ID / PAN / SSN</label>
-                  <input
-                    type="text"
-                    value={formData.panOrTaxNumber}
-                    onChange={(e) => setFormData({ ...formData, panOrTaxNumber: e.target.value })}
-                    placeholder="e.g. ABCDE1234F"
                     className="w-full font-medium bg-slate-50 border border-slate-300 rounded-lg p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
