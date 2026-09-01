@@ -22,11 +22,13 @@ export interface CompanySettings {
   otRateMultiplier: number; // e.g. 1.5x
   holidayOtMultiplier: number; // e.g. 2.0x
   lateDeductionThreshold: number; // e.g. 3 late marks = 0.5 day salary
-  pfPercentage: number; // 12%
+  pfPercentage: number; // e.g. 12% or 0
   pfCapLimit: number; // e.g. 1800 or 0 for uncapped
+  enablePF?: boolean; // Enable/disable PF deduction (default false/0)
   esiPercentage: number; // 0.75%
   esiWageThreshold: number; // e.g. 21000 or 3000
-  ptSlabAmount: number; // Professional Tax flat/slab
+  ptSlabAmount: number; // Professional Tax flat/slab (e.g. 200 or 0)
+  enablePT?: boolean; // Enable/disable PT deduction (default false/0)
   companySignatoryName: string;
   companySignatoryTitle: string;
   signatureUrl?: string; // Base64 data URL or image URL
@@ -80,6 +82,23 @@ export interface AttendanceRecord {
   piecesCompleted?: number;
   baseSalary?: number;
   remarks?: string;
+
+  // Optional manual salary component overrides from Excel ingestion
+  manualBasicPay?: number;
+  manualHra?: number;
+  manualConveyance?: number;
+  manualDa?: number; // Dearness Allowance
+  manualSpecialAllowance?: number;
+  manualMedicalAllowance?: number;
+  manualOvertimePay?: number;
+  manualIncentiveBonus?: number;
+  manualReimbursements?: number;
+  manualPf?: number; // Provident Fund deduction override
+  manualPt?: number; // Professional Tax deduction override
+  manualLopDeduction?: number; // Loss of Pay deduction override
+  manualLateDeduction?: number; // Late arrival penalty override
+  manualLoanAdvance?: number; // Loan / Salary Advance deduction override
+  manualOtherDeductions?: number;
 }
 
 export interface SalaryBreakdown {
@@ -98,6 +117,7 @@ export interface SalaryBreakdown {
   // Earnings
   basicPay: number;
   hra: number; // House Rent Allowance (e.g. 40% of basic)
+  dearnessAllowance: number; // Dearness Allowance (DA)
   conveyanceAllowance: number;
   medicalAllowance: number;
   specialAllowance: number;
@@ -108,13 +128,14 @@ export interface SalaryBreakdown {
   grossEarnings: number;
   
   // Deductions
-  providentFund: number; // Employee PF (12%)
-  employerPF: number; // Employer PF (12% for reference/CTC)
+  providentFund: number; // Employee PF (12% or 0)
+  employerPF: number; // Employer PF
   esi: number; // Health Insurance / ESI
   professionalTax: number; // PT
   incomeTaxTDS: number; // TDS
-  lossOfPayDeduction: number; // Proration deduction for absent days
+  lossOfPayDeduction: number; // Loss of Pay Deduction (LOP Days * Daily Rate)
   lateDeduction: number; // Penalty for late marks
+  loanAdvance: number; // Loan & Salary Advances
   otherDeductions: number;
   totalDeductions: number;
   
@@ -148,6 +169,25 @@ export interface ColumnMapping {
   holidaysWorked: string;
   lateArrivals: string;
   baseSalary?: string;
+
+  // Earnings columns
+  basicPay?: string;
+  hra?: string;
+  conveyance?: string;
+  da?: string; // Dearness Allowance
+  specialAllowance?: string;
+  medicalAllowance?: string;
+  overtimePay?: string;
+  incentiveBonus?: string;
+  reimbursements?: string;
+
+  // Deductions columns
+  providentFund?: string; // PF
+  professionalTax?: string; // PT
+  lopDeduction?: string; // Loss of Pay amount
+  lateDeduction?: string; // Late penalty amount
+  loanAdvance?: string; // Loan / Salary Advance
+  otherDeductions?: string;
 }
 
 export interface AuditLog {

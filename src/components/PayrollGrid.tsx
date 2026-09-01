@@ -36,7 +36,6 @@ interface PayrollGridProps {
   settings: CompanySettings;
   currentRole: UserRole;
   onViewPaySlip: (salary: SalaryBreakdown) => void;
-  onOpenAdjustment: (salary: SalaryBreakdown) => void;
   onBulkApprove: (selectedIds: string[]) => void;
   onBulkDownloadPDFs: (selectedSalaries: SalaryBreakdown[]) => void;
   onOpenAddEmployee?: () => void;
@@ -53,7 +52,6 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
   settings,
   currentRole,
   onViewPaySlip,
-  onOpenAdjustment,
   onBulkApprove,
   onBulkDownloadPDFs,
   onOpenAddEmployee,
@@ -486,16 +484,6 @@ export const PayrollGrid: React.FC<PayrollGridProps> = ({
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        
-                        {currentRole !== 'employee' && (
-                          <button
-                            onClick={() => onOpenAdjustment(s)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
-                            title="Adjust Figures / Bonus (Audit Logged)"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        )}
 
                         <button
                           onClick={() => openWhatsAppPayslip(s, settings)}

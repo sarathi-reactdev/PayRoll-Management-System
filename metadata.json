@@ -1,6 +1,6 @@
 {
-  "name": "PayMaster Pro - Payroll & Pay Slip Engine",
-  "description": "Enterprise-grade payroll calculation and pay slip generation suite with Excel attendance ingestion, customizable salary structures, audit trails, and multi-format export.",
+  "name": "iMatrix Technology Solutions — Payroll Management System",
+  "description": "Enterprise payroll management system with automated attendance processing, salary calculations, pay slip generation, and tax compliance.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

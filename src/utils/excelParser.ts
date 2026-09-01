@@ -18,10 +18,29 @@ export const DEFAULT_COLUMN_KEYWORDS: Record<keyof ColumnMapping, string[]> = {
   halfDays: ['halfday', 'halfdays', 'half_days', 'half_day', 'hd', 'half_day_count'],
   overtimeHours: ['overtime', 'ot', 'othours', 'ot_hours', 'overtime_hours', 'ot_hrs', 'extra_hours'],
   paidLeaves: ['paidleave', 'paidleaves', 'paid_leaves', 'paid_leave', 'cl', 'sl', 'el', 'leaves_taken', 'approved_leaves'],
-  unpaidLeaves: ['unpaidleave', 'unpaidleaves', 'unpaid_leaves', 'unpaid_leave', 'lop', 'loss_of_pay', 'lwp'],
+  unpaidLeaves: ['unpaidleave', 'unpaidleaves', 'unpaid_leaves', 'unpaid_leave', 'lwp', 'lop_days', 'unpaid_days', 'unpaidleaveslop'],
   holidaysWorked: ['holidaysworked', 'holidays_worked', 'holiday_work', 'ph_worked', 'holiday_days_worked'],
-  lateArrivals: ['late', 'latearrivals', 'late_arrivals', 'latemarks', 'late_marks', 'lates', 'late_count'],
-  baseSalary: ['salary', 'basesalary', 'basic_salary', 'basic', 'base_salary', 'monthly_salary', 'ctc', 'gross_salary'],
+  lateArrivals: ['latemarks', 'late_marks', 'late', 'latearrivals', 'late_arrivals', 'lates', 'late_count'],
+  baseSalary: ['basesalary', 'basic_salary', 'base_salary', 'monthly_salary', 'ctc', 'gross_salary'],
+
+  // Custom Earnings
+  basicPay: ['basicsalary', 'basic_salary', 'basic', 'basicpay', 'basic_pay', 'basicamount', 'basic_amt'],
+  hra: ['houserentallowancehra', 'houserentallowance', 'house_rent_allowance', 'hra', 'house_rent', 'rent_allowance'],
+  conveyance: ['conveyanceallowance', 'conveyance_allowance', 'travel_allowance', 'conveyance', 'ca', 'ta'],
+  da: ['dearnessallowanceda', 'dearnessallowance', 'dearness_allowance', 'dearness', 'da'],
+  specialAllowance: ['specialallowancesa', 'specialallowance', 'special_allowance', 'spl_allowance', 'special', 'sa'],
+  medicalAllowance: ['medicalallowance', 'medical_allowance', 'med_allowance', 'medical'],
+  overtimePay: ['overtimepayot', 'overtimepay', 'overtime_pay', 'otpay', 'ot_pay', 'ot_amount', 'ot_amt'],
+  incentiveBonus: ['incentivebonus', 'incentive_bonus', 'incentive', 'bonus', 'incentiveandbonus', 'incentivebonusamount', 'performancebonus', 'performance_bonus', 'incentives', 'variable_pay', 'incentive_pay'],
+  reimbursements: ['reimbursement', 'reimbursements', 'claims', 'other_additions', 'allowance_other'],
+
+  // Custom Deductions
+  providentFund: ['providentfundpf', 'providentfund', 'provident_fund', 'epf', 'employee_pf', 'pf_deduction', 'pf'],
+  professionalTax: ['professionaltaxpt', 'professionaltax', 'professional_tax', 'prof_tax', 'pt_deduction', 'pt'],
+  lopDeduction: ['lossofpaylopdeductions', 'lossofpaydeductions', 'lossofpaydeduction', 'loss_of_pay_deductions', 'lossofpay', 'loss_of_pay', 'lopdeduction', 'lop_deduction', 'unpaid_deduction'],
+  lateDeduction: ['latearrivalpenalty', 'late_arrival_penalty', 'latepenalty', 'late_penalty', 'latededuction', 'late_deduction', 'late_fine'],
+  loanAdvance: ['loanandsalaryadvances', 'loanandadvance', 'loansalaryadvances', 'loan_salary_advances', 'loansalaryadvance', 'salaryadvance', 'salary_advance', 'loan_advance', 'loan_deduction', 'advance_recovery', 'loan', 'advance', 'loans', 'advances', 'loanadvances'],
+  otherDeductions: ['otherdeduction', 'other_deductions', 'other_deduction', 'misc_deductions', 'deductions_other'],
 };
 
 /**
@@ -46,15 +65,49 @@ export function autoDetectMapping(headers: string[]): ColumnMapping {
     holidaysWorked: '',
     lateArrivals: '',
     baseSalary: '',
+    basicPay: '',
+    hra: '',
+    conveyance: '',
+    da: '',
+    specialAllowance: '',
+    medicalAllowance: '',
+    overtimePay: '',
+    incentiveBonus: '',
+    reimbursements: '',
+    providentFund: '',
+    professionalTax: '',
+    lopDeduction: '',
+    lateDeduction: '',
+    loanAdvance: '',
+    otherDeductions: '',
   };
 
-  (Object.keys(DEFAULT_COLUMN_KEYWORDS) as (keyof ColumnMapping)[]).forEach(fieldKey => {
+  const fieldKeys = Object.keys(DEFAULT_COLUMN_KEYWORDS) as (keyof ColumnMapping)[];
+
+  // Pass 1: Exact matches first
+  fieldKeys.forEach(fieldKey => {
     const keywords = DEFAULT_COLUMN_KEYWORDS[fieldKey];
     for (const kw of keywords) {
       const cleanKw = kw.replace(/[^a-z0-9]/g, '');
-      const match = normalizedHeaders.find(h => h.clean === cleanKw || h.clean.includes(cleanKw));
-      if (match) {
-        mapping[fieldKey] = match.original;
+      const exactMatch = normalizedHeaders.find(h => h.clean === cleanKw);
+      if (exactMatch) {
+        mapping[fieldKey] = exactMatch.original;
+        break;
+      }
+    }
+  });
+
+  // Pass 2: Substring matches for unmapped fields (with length guard to prevent short false positives)
+  fieldKeys.forEach(fieldKey => {
+    if (mapping[fieldKey]) return; // Already matched in Pass 1
+    const keywords = DEFAULT_COLUMN_KEYWORDS[fieldKey];
+    for (const kw of keywords) {
+      const cleanKw = kw.replace(/[^a-z0-9]/g, '');
+      // Avoid short 2-character keywords (like 'da', 'pt', 'pf', 'sa', 'ta') matching arbitrarily inside long unrelated column headers
+      if (cleanKw.length < 3) continue;
+      const partialMatch = normalizedHeaders.find(h => h.clean.includes(cleanKw));
+      if (partialMatch) {
+        mapping[fieldKey] = partialMatch.original;
         break;
       }
     }
@@ -139,7 +192,26 @@ export function mapRowsToAttendance(
     const unpaidLeaves = parseNum(mapping.unpaidLeaves ? row[mapping.unpaidLeaves] : 0, 0);
     const holidaysWorked = parseNum(mapping.holidaysWorked ? row[mapping.holidaysWorked] : 0, 0);
     const lateArrivalsCount = parseNum(mapping.lateArrivals ? row[mapping.lateArrivals] : 0, 0);
-    const baseSalary = mapping.baseSalary ? parseNum(row[mapping.baseSalary], 0) : parseNum(row['Basic Salary'] || row['Base Salary'] || row['Salary'], 0);
+    const baseSalary = mapping.baseSalary && row[mapping.baseSalary] !== undefined ? parseNum(row[mapping.baseSalary], 0) : parseNum(row['Basic Salary'] || row['Base Salary'] || row['Salary'], 0);
+
+    // Parse manual earnings if present
+    const manualBasicPay = mapping.basicPay && row[mapping.basicPay] !== undefined ? parseNum(row[mapping.basicPay], -1) : (row['Basic Salary'] !== undefined || row['Basic Pay'] !== undefined || row['Basic'] !== undefined ? parseNum(row['Basic Salary'] ?? row['Basic Pay'] ?? row['Basic'], -1) : -1);
+    const manualHra = mapping.hra && row[mapping.hra] !== undefined ? parseNum(row[mapping.hra], -1) : (row['House Rent Allowance (HRA)'] !== undefined || row['House Rent Allowance'] !== undefined || row['HRA'] !== undefined ? parseNum(row['House Rent Allowance (HRA)'] ?? row['House Rent Allowance'] ?? row['HRA'], -1) : -1);
+    const manualConveyance = mapping.conveyance && row[mapping.conveyance] !== undefined ? parseNum(row[mapping.conveyance], -1) : (row['CA'] !== undefined || row['Conveyance'] !== undefined ? parseNum(row['CA'] ?? row['Conveyance'], -1) : -1);
+    const manualDa = mapping.da && row[mapping.da] !== undefined ? parseNum(row[mapping.da], -1) : (row['Dearness Allowance'] !== undefined || row['DA'] !== undefined || row['Dearness'] !== undefined ? parseNum(row['Dearness Allowance'] ?? row['DA'] ?? row['Dearness'], -1) : -1);
+    const manualSpecialAllowance = mapping.specialAllowance && row[mapping.specialAllowance] !== undefined ? parseNum(row[mapping.specialAllowance], -1) : (row['Special Allowance'] !== undefined || row['SA'] !== undefined ? parseNum(row['Special Allowance'] ?? row['SA'], -1) : -1);
+    const manualMedicalAllowance = mapping.medicalAllowance && row[mapping.medicalAllowance] !== undefined ? parseNum(row[mapping.medicalAllowance], -1) : (row['Medical'] !== undefined || row['Medical Allowance'] !== undefined ? parseNum(row['Medical'] ?? row['Medical Allowance'], -1) : -1);
+    const manualOvertimePay = mapping.overtimePay && row[mapping.overtimePay] !== undefined ? parseNum(row[mapping.overtimePay], -1) : (row['Overtime Pay (O.T.)'] !== undefined || row['Overtime Pay'] !== undefined || row['OT Pay'] !== undefined ? parseNum(row['Overtime Pay (O.T.)'] ?? row['Overtime Pay'] ?? row['OT Pay'], -1) : -1);
+    const manualIncentiveBonus = mapping.incentiveBonus && row[mapping.incentiveBonus] !== undefined ? parseNum(row[mapping.incentiveBonus], -1) : (row['Incentive & Bonus'] !== undefined || row['Incentive'] !== undefined || row['Bonus'] !== undefined || row['Performance Bonus'] !== undefined ? parseNum(row['Incentive & Bonus'] ?? row['Incentive'] ?? row['Bonus'] ?? row['Performance Bonus'], -1) : -1);
+    const manualReimbursements = mapping.reimbursements && row[mapping.reimbursements] !== undefined ? parseNum(row[mapping.reimbursements], -1) : (row['Reimbursement'] !== undefined || row['Reimbursements'] !== undefined ? parseNum(row['Reimbursement'] ?? row['Reimbursements'], -1) : -1);
+
+    // Parse manual deductions if present
+    const manualPf = mapping.providentFund && row[mapping.providentFund] !== undefined ? parseNum(row[mapping.providentFund], -1) : (row['Provident Fund (PF)'] !== undefined || row['Provident Fund'] !== undefined || row['PF'] !== undefined ? parseNum(row['Provident Fund (PF)'] ?? row['Provident Fund'] ?? row['PF'], -1) : -1);
+    const manualPt = mapping.professionalTax && row[mapping.professionalTax] !== undefined ? parseNum(row[mapping.professionalTax], -1) : (row['Professional Tax (PT)'] !== undefined || row['Professional Tax'] !== undefined || row['PT'] !== undefined ? parseNum(row['Professional Tax (PT)'] ?? row['Professional Tax'] ?? row['PT'], -1) : -1);
+    const manualLopDeduction = mapping.lopDeduction && row[mapping.lopDeduction] !== undefined ? parseNum(row[mapping.lopDeduction], -1) : (row['Loss of Pay (LOP Deductions)'] !== undefined || row['Loss of Pay Deduction'] !== undefined || row['LOP Deduction'] !== undefined ? parseNum(row['Loss of Pay (LOP Deductions)'] ?? row['Loss of Pay Deduction'] ?? row['LOP Deduction'], -1) : -1);
+    const manualLateDeduction = mapping.lateDeduction && row[mapping.lateDeduction] !== undefined ? parseNum(row[mapping.lateDeduction], -1) : (row['Late Arrival Penalty'] !== undefined || row['Late Penalty'] !== undefined || row['Late Deduction'] !== undefined ? parseNum(row['Late Arrival Penalty'] ?? row['Late Penalty'] ?? row['Late Deduction'], -1) : -1);
+    const manualLoanAdvance = mapping.loanAdvance && row[mapping.loanAdvance] !== undefined ? parseNum(row[mapping.loanAdvance], -1) : (row['Loan & Salary Advances'] !== undefined || row['Loan / Advances'] !== undefined || row['Loan'] !== undefined || row['Advance'] !== undefined || row['Salary Advance'] !== undefined ? parseNum(row['Loan & Salary Advances'] ?? row['Loan / Advances'] ?? row['Loan'] ?? row['Advance'] ?? row['Salary Advance'], -1) : -1);
+    const manualOtherDeductions = mapping.otherDeductions && row[mapping.otherDeductions] !== undefined ? parseNum(row[mapping.otherDeductions], -1) : (row['Other Deductions'] !== undefined ? parseNum(row['Other Deductions'], -1) : -1);
 
     // Business Logic Validations
     if (daysPresent < 0) {
@@ -199,6 +271,22 @@ export function mapRowsToAttendance(
       holidaysWorked,
       baseSalary: baseSalary > 0 ? baseSalary : undefined,
       remarks: row['Remarks'] || row['Notes'] || '',
+
+      manualBasicPay: manualBasicPay >= 0 ? manualBasicPay : undefined,
+      manualHra: manualHra >= 0 ? manualHra : undefined,
+      manualConveyance: manualConveyance >= 0 ? manualConveyance : undefined,
+      manualDa: manualDa >= 0 ? manualDa : undefined,
+      manualSpecialAllowance: manualSpecialAllowance >= 0 ? manualSpecialAllowance : undefined,
+      manualMedicalAllowance: manualMedicalAllowance >= 0 ? manualMedicalAllowance : undefined,
+      manualOvertimePay: manualOvertimePay >= 0 ? manualOvertimePay : undefined,
+      manualIncentiveBonus: manualIncentiveBonus >= 0 ? manualIncentiveBonus : undefined,
+      manualReimbursements: manualReimbursements >= 0 ? manualReimbursements : undefined,
+      manualPf: manualPf >= 0 ? manualPf : undefined,
+      manualPt: manualPt >= 0 ? manualPt : undefined,
+      manualLopDeduction: manualLopDeduction >= 0 ? manualLopDeduction : undefined,
+      manualLateDeduction: manualLateDeduction >= 0 ? manualLateDeduction : undefined,
+      manualLoanAdvance: manualLoanAdvance >= 0 ? manualLoanAdvance : undefined,
+      manualOtherDeductions: manualOtherDeductions >= 0 ? manualOtherDeductions : undefined,
     });
   });
 
@@ -214,75 +302,75 @@ export function downloadSampleAttendanceTemplate(): void {
       'Employee ID': 'EMP-1001',
       'Employee Name': 'Alexander Wright',
       'Department': 'XML',
-      'Basic Salary': 15000,
       'Days Present': 28,
       'Days Absent': 0,
       'Half Days': 0,
       'Paid Leaves': 2,
       'Unpaid Leaves (LOP)': 0,
       'Overtime Hours': 14,
-      'Holidays Worked': 1,
       'Late Marks': 0,
-      'Remarks': 'Standard Month Full Attendance'
+      'Incentive & Bonus': 500,
+      'Loan & Salary Advances': 0,
+      'Remarks': 'Standard Month - 100% attendance'
     },
     {
       'Employee ID': 'EMP-1002',
       'Employee Name': 'Sophia Chen',
       'Department': 'ePub',
-      'Basic Salary': 15000,
       'Days Present': 26,
       'Days Absent': 1,
       'Half Days': 2,
       'Paid Leaves': 1,
-      'Unpaid Leaves (LOP)': 1,
+      'Unpaid Leaves (LOP)': 2,
       'Overtime Hours': 18.5,
-      'Holidays Worked': 0,
       'Late Marks': 4,
-      'Remarks': 'ePub release overtime'
+      'Incentive & Bonus': 0,
+      'Loan & Salary Advances': 250,
+      'Remarks': 'Overtime & late marks'
     },
     {
       'Employee ID': 'EMP-1003',
       'Employee Name': 'Marcus Holloway',
       'Department': 'PPT',
-      'Basic Salary': 15000,
       'Days Present': 29,
       'Days Absent': 0,
       'Half Days': 0,
       'Paid Leaves': 1,
       'Unpaid Leaves (LOP)': 0,
       'Overtime Hours': 5,
-      'Holidays Worked': 0,
       'Late Marks': 1,
+      'Incentive & Bonus': 300,
+      'Loan & Salary Advances': 0,
       'Remarks': 'PPT master slide templates'
     },
     {
       'Employee ID': 'EMP-1004',
       'Employee Name': 'Amara Patel',
       'Department': 'Word',
-      'Basic Salary': 15000,
       'Days Present': 27,
       'Days Absent': 0,
       'Half Days': 0,
       'Paid Leaves': 3,
       'Unpaid Leaves (LOP)': 0,
       'Overtime Hours': 8,
-      'Holidays Worked': 0,
       'Late Marks': 2,
+      'Incentive & Bonus': 0,
+      'Loan & Salary Advances': 0,
       'Remarks': 'Approved annual leave'
     },
     {
       'Employee ID': 'EMP-1005',
       'Employee Name': 'David Rodriguez',
       'Department': 'XML',
-      'Basic Salary': 15000,
       'Days Present': 22,
       'Days Absent': 0,
       'Half Days': 0,
       'Paid Leaves': 0,
-      'Unpaid Leaves (LOP)': 0,
+      'Unpaid Leaves (LOP)': 8,
       'Overtime Hours': 32,
-      'Holidays Worked': 2,
       'Late Marks': 0,
+      'Incentive & Bonus': 1000,
+      'Loan & Salary Advances': 500,
       'Remarks': '24/7 Server migration on-call'
     }
   ];
@@ -291,19 +379,19 @@ export function downloadSampleAttendanceTemplate(): void {
 
   // Auto-width columns
   const colWidths = [
-    { wch: 15 }, // Emp ID
-    { wch: 22 }, // Name
-    { wch: 22 }, // Dept
-    { wch: 14 }, // Basic Salary
-    { wch: 14 }, // Present
-    { wch: 14 }, // Absent
+    { wch: 15 }, // Employee ID
+    { wch: 22 }, // Employee Name
+    { wch: 18 }, // Department
+    { wch: 14 }, // Days Present
+    { wch: 14 }, // Days Absent
     { wch: 12 }, // Half Days
     { wch: 14 }, // Paid Leaves
-    { wch: 20 }, // Unpaid
-    { wch: 16 }, // OT Hours
-    { wch: 16 }, // Holidays Worked
+    { wch: 22 }, // Unpaid Leaves (LOP)
+    { wch: 16 }, // Overtime Hours
     { wch: 14 }, // Late Marks
-    { wch: 35 }, // Remarks
+    { wch: 18 }, // Incentive & Bonus
+    { wch: 24 }, // Loan & Salary Advances
+    { wch: 34 }, // Remarks
   ];
   ws['!cols'] = colWidths;
 

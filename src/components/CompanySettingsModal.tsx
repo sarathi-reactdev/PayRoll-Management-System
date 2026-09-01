@@ -21,6 +21,8 @@ import { CompanySettings } from '../types/payroll';
 interface CompanySettingsModalProps {
   isOpen: boolean;
   settings: CompanySettings;
+  activeMonth?: string;
+  periodLabel?: string;
   onClose: () => void;
   onSaveSettings: (newSettings: CompanySettings) => void;
 }
@@ -28,6 +30,8 @@ interface CompanySettingsModalProps {
 export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
   isOpen,
   settings,
+  activeMonth,
+  periodLabel,
   onClose,
   onSaveSettings,
 }) => {
@@ -608,95 +612,169 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Pay Cycle Standard Days
-                  </label>
-                  <input
-                    type="number"
-                    min="20"
-                    max="31"
-                    value={formData.payCycleDayCount}
-                    onChange={(e) => setFormData({ ...formData, payCycleDayCount: parseInt(e.target.value) || 30 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">30 days standard or actual calendar days</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Pay Cycle Standard Days
+                    </label>
+                    {activeMonth && (
+                      <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                        {periodLabel || activeMonth}: {(() => {
+                          const [y, m] = activeMonth.split('-').map(Number);
+                          return y && m ? new Date(y, m, 0).getDate() : 30;
+                        })()} Days
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="20"
+                      max="31"
+                      value={formData.payCycleDayCount}
+                      onChange={(e) => setFormData({ ...formData, payCycleDayCount: parseInt(e.target.value) || 30 })}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    {activeMonth && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const [y, m] = activeMonth.split('-').map(Number);
+                          const days = y && m ? new Date(y, m, 0).getDate() : 30;
+                          setFormData({ ...formData, payCycleDayCount: days });
+                        }}
+                        className="shrink-0 px-2.5 py-2 text-[11px] font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center space-x-1 shadow-xs"
+                        title="Auto-set to actual calendar days of the selected month"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Auto-Set</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-1 text-[10px] text-slate-500">
+                    <span>Standard options:</span>
+                    <div className="space-x-1">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, payCycleDayCount: 30 })}
+                        className={`px-1.5 py-0.5 rounded border ${formData.payCycleDayCount === 30 ? 'bg-blue-50 border-blue-400 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                      >
+                        30 Days (Fixed)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, payCycleDayCount: 26 })}
+                        className={`px-1.5 py-0.5 rounded border ${formData.payCycleDayCount === 26 ? 'bg-blue-50 border-blue-400 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                      >
+                        26 Working Days
+                      </button>
+                      {activeMonth && (() => {
+                        const [y, m] = activeMonth.split('-').map(Number);
+                        const actualDays = y && m ? new Date(y, m, 0).getDate() : 30;
+                        if (actualDays !== 30 && actualDays !== 26) {
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, payCycleDayCount: actualDays })}
+                              className={`px-1.5 py-0.5 rounded border ${formData.payCycleDayCount === actualDays ? 'bg-blue-50 border-blue-400 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                            >
+                              {actualDays} Days (Current)
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Regular Overtime Rate Multiplier
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1.0"
-                    max="3.0"
-                    value={formData.otRateMultiplier}
-                    onChange={(e) => setFormData({ ...formData, otRateMultiplier: parseFloat(e.target.value) || 1.5 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">Default 1.5x standard hourly rate</p>
+                {/* Provident Fund (PF) Settings */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 flex items-center space-x-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.enablePF === true}
+                        onChange={(e) => setFormData({ ...formData, enablePF: e.target.checked })}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                      />
+                      <span>Enable Provident Fund (PF) Deduction</span>
+                    </label>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${formData.enablePF ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>
+                      {formData.enablePF ? 'Active' : 'Disabled (₹0)'}
+                    </span>
+                  </div>
+
+                  {formData.enablePF && (
+                    <div className="grid grid-cols-2 gap-2.5 pt-1.5">
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                          PF Percentage (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          max="20"
+                          value={formData.pfPercentage}
+                          onChange={(e) => setFormData({ ...formData, pfPercentage: parseFloat(e.target.value) || 0 })}
+                          className="w-full text-xs font-medium bg-white border border-slate-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                          Monthly Cap Limit ({formData.currencySymbol})
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={formData.pfCapLimit}
+                          onChange={(e) => setFormData({ ...formData, pfCapLimit: parseFloat(e.target.value) || 0 })}
+                          className="w-full text-xs font-medium bg-white border border-slate-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-slate-400">
+                    When disabled or set to 0%, PF deduction is ₹0 on all payslips. You can customize anytime.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Holiday / Weekend OT Multiplier
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1.0"
-                    max="3.0"
-                    value={formData.holidayOtMultiplier}
-                    onChange={(e) => setFormData({ ...formData, holidayOtMultiplier: parseFloat(e.target.value) || 2.0 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">Default 2.0x for off-day shifts</p>
-                </div>
+                {/* Professional Tax (PT) Settings */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 flex items-center space-x-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.enablePT === true}
+                        onChange={(e) => setFormData({ ...formData, enablePT: e.target.checked })}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                      />
+                      <span>Enable Professional Tax (PT) Deduction</span>
+                    </label>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${formData.enablePT ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>
+                      {formData.enablePT ? 'Active' : 'Disabled (₹0)'}
+                    </span>
+                  </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Late Arrival Penalty Threshold
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={formData.lateDeductionThreshold}
-                    onChange={(e) => setFormData({ ...formData, lateDeductionThreshold: parseInt(e.target.value) || 3 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">e.g. every 3 late marks = 0.5 day wage deduction</p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Provident Fund (PF / 401k) %
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    max="20"
-                    value={formData.pfPercentage}
-                    onChange={(e) => setFormData({ ...formData, pfPercentage: parseFloat(e.target.value) || 12 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">Standard statutory 12% of Basic Pay</p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Professional Tax Flat ({formData.currencySymbol})
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="50"
-                    value={formData.ptSlabAmount}
-                    onChange={(e) => setFormData({ ...formData, ptSlabAmount: parseFloat(e.target.value) || 200 })}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded p-2 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                  {formData.enablePT && (
+                    <div className="pt-1.5">
+                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                        Professional Tax Flat Slab ({formData.currencySymbol})
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={formData.ptSlabAmount}
+                        onChange={(e) => setFormData({ ...formData, ptSlabAmount: parseFloat(e.target.value) || 0 })}
+                        className="w-full text-xs font-medium bg-white border border-slate-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+                  <p className="text-[10px] text-slate-400">
+                    When disabled or set to 0, PT deduction is ₹0 on all payslips. You can customize anytime.
+                  </p>
                 </div>
 
               </div>

@@ -200,7 +200,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-xs transition cursor-pointer"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>WhatsApp / Email Dispatch</span>
+              <span>WhatsApp Payslip Dispatch</span>
             </button>
           </div>
         </div>

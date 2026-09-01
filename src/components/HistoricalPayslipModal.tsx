@@ -73,6 +73,7 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
     overtimeHours: 0,
     basicPay: 5000,
     hra: 2000,
+    dearnessAllowance: 500,
     conveyanceAllowance: 800,
     specialAllowance: 1000,
     overtimePay: 0,
@@ -125,6 +126,7 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
   const singleGross = 
     Number(singleForm.basicPay || 0) +
     Number(singleForm.hra || 0) +
+    Number(singleForm.dearnessAllowance || 0) +
     Number(singleForm.conveyanceAllowance || 0) +
     Number(singleForm.specialAllowance || 0) +
     Number(singleForm.overtimePay || 0) +
@@ -188,6 +190,7 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
       lossOfPayDays: lopDays,
       basicPay: Number(singleForm.basicPay),
       hra: Number(singleForm.hra),
+      dearnessAllowance: Number(singleForm.dearnessAllowance || 0),
       conveyanceAllowance: Number(singleForm.conveyanceAllowance),
       medicalAllowance: 0,
       specialAllowance: Number(singleForm.specialAllowance),
@@ -203,6 +206,7 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
       incomeTaxTDS: 0,
       lossOfPayDeduction: Number(singleForm.lossOfPayDeduction),
       lateDeduction: Number(singleForm.lateDeduction),
+      loanAdvance: 0,
       otherDeductions: Number(singleForm.otherDeductions),
       totalDeductions: singleDeductions,
       netPay: singleNet,
@@ -356,6 +360,7 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
             lossOfPayDays: lopDays,
             basicPay,
             hra,
+            dearnessAllowance: Number(row['Dearness Allowance (DA)'] || row['DA'] || row['dearnessAllowance'] || 0),
             conveyanceAllowance: conveyance,
             medicalAllowance: medical,
             specialAllowance: special,
@@ -371,6 +376,7 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
             incomeTaxTDS: tds,
             lossOfPayDeduction: lopDeduction,
             lateDeduction,
+            loanAdvance: Number(row['Loan / Advances'] || row['loanAdvance'] || 0),
             otherDeductions,
             totalDeductions: deductions,
             netPay: net,
@@ -897,6 +903,18 @@ export const HistoricalPayslipModal: React.FC<HistoricalPayslipModalProps> = ({
                     step="0.01"
                     value={singleForm.hra}
                     onChange={(e) => setSingleForm(prev => ({ ...prev, hra: parseFloat(e.target.value) || 0 }))}
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Dearness Allowance (DA) ({sym})</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={singleForm.dearnessAllowance}
+                    onChange={(e) => setSingleForm(prev => ({ ...prev, dearnessAllowance: parseFloat(e.target.value) || 0 }))}
                     className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
                   />
                 </div>

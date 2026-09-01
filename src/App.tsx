@@ -30,7 +30,6 @@ import { PayrollGrid } from './components/PayrollGrid';
 import { PaySlipModal } from './components/PaySlipModal';
 import { DataIngestionModal } from './components/DataIngestionModal';
 import { CompanySettingsModal } from './components/CompanySettingsModal';
-import { SalaryAdjustmentModal } from './components/SalaryAdjustmentModal';
 import { AuditTrailModal } from './components/AuditTrailModal';
 import { BankTransferModal } from './components/BankTransferModal';
 import { BulkDispatchModal } from './components/BulkDispatchModal';
@@ -116,7 +115,6 @@ export default function App() {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   
   const [activePaySlip, setActivePaySlip] = useState<SalaryBreakdown | null>(null);
-  const [activeAdjustment, setActiveAdjustment] = useState<SalaryBreakdown | null>(null);
 
   // Manual Overrides state map (empId -> partial overrides)
   const [salaryOverrides, setSalaryOverrides] = useState<Record<string, Partial<SalaryBreakdown>>>({});
@@ -245,48 +243,6 @@ export default function App() {
       changedBy: currentRole === 'super_admin' ? 'Super Admin' : 'HR Payroll Manager',
       timestamp: new Date().toISOString(),
       reason: 'Biometric/Excel Attendance data synced with payroll calculator',
-    };
-
-    setAuditLogs(prev => [newLog, ...prev]);
-  };
-
-  const handleSaveAdjustment = (
-    updatedSalary: SalaryBreakdown, 
-    reason: string, 
-    fieldChanged: string, 
-    prevVal: any, 
-    newVal: any,
-    updatedAttendance?: Partial<AttendanceRecord>
-  ) => {
-    // If attendance was updated in the modal, persist it to attendanceRecords state as well
-    if (updatedAttendance) {
-      setAttendanceRecords(prev => {
-        const updated = prev.map(rec => {
-          if (rec.empId === updatedSalary.empId) {
-            return { ...rec, ...updatedAttendance };
-          }
-          return rec;
-        });
-        localStorage.setItem('paymaster_attendance', JSON.stringify(updated));
-        return updated;
-      });
-    }
-
-    setSalaryOverrides(prev => ({
-      ...prev,
-      [updatedSalary.empId]: updatedSalary,
-    }));
-
-    const newLog: AuditLog = {
-      id: `audit-${Date.now()}`,
-      empId: updatedSalary.empId,
-      employeeName: updatedSalary.profile.name,
-      fieldChanged,
-      previousValue: prevVal,
-      newValue: newVal,
-      changedBy: currentRole === 'super_admin' ? 'Super Admin' : 'HR Payroll Manager',
-      timestamp: new Date().toISOString(),
-      reason,
     };
 
     setAuditLogs(prev => [newLog, ...prev]);
@@ -586,7 +542,6 @@ export default function App() {
               settings={companySettings}
               currentRole={currentRole}
               onViewPaySlip={(s) => setActivePaySlip(s)}
-              onOpenAdjustment={(s) => setActiveAdjustment(s)}
               onBulkApprove={handleBulkApprove}
               onBulkDownloadPDFs={handleBulkDownloadPDFs}
               onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
@@ -744,20 +699,13 @@ export default function App() {
       <CompanySettingsModal
         isOpen={isSettingsOpen}
         settings={companySettings}
+        activeMonth={selectedMonth}
+        periodLabel={periodLabel}
         onClose={() => setIsSettingsOpen(false)}
         onSaveSettings={handleSaveSettings}
       />
 
-      {/* 4. Salary Adjustment (Audit Logged) */}
-      <SalaryAdjustmentModal
-        isOpen={!!activeAdjustment}
-        salary={activeAdjustment}
-        settings={companySettings}
-        onClose={() => setActiveAdjustment(null)}
-        onSaveAdjustment={handleSaveAdjustment}
-      />
-
-      {/* 5. Audit Trail Ledger */}
+      {/* 4. Audit Trail Ledger */}
       <AuditTrailModal
         isOpen={isAuditTrailOpen}
         onClose={() => setIsAuditTrailOpen(false)}

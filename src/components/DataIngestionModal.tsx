@@ -243,215 +243,256 @@ export const DataIngestionModal: React.FC<DataIngestionModalProps> = ({
 
           {/* STEP 2: COLUMN MAPPING */}
           {step === 'mapping' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex items-center justify-between text-xs text-blue-900">
                 <div className="flex items-center space-x-2">
                   <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
                   <span>
-                    File: <strong className="font-semibold">{fileName}</strong> ({rawRows.length} rows detected). We've auto-mapped columns based on headers. Adjust if needed:
+                    File: <strong className="font-semibold">{fileName}</strong> ({rawRows.length} rows detected). We've auto-mapped attendance columns based on headers. Adjust if needed:
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-                {/* Mandatory Field */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Employee ID <span className="text-red-500">*</span></span>
-                    <span className="text-[10px] text-slate-400 font-normal">Internal Key</span>
-                  </label>
-                  <select
-                    value={mapping.empId}
-                    onChange={(e) => handleMappingChange('empId', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* Attendance Fields Group */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                  <span>Attendance & Employee Timesheet Columns</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+                  {/* Mandatory Field */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Employee ID <span className="text-red-500">*</span></span>
+                      <span className="text-[10px] text-slate-400 font-normal">Key</span>
+                    </label>
+                    <select
+                      value={mapping.empId}
+                      onChange={(e) => handleMappingChange('empId', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Name */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Employee Name</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Display name</span>
-                  </label>
-                  <select
-                    value={mapping.name}
-                    onChange={(e) => handleMappingChange('name', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Name */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Employee Name</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Display</span>
+                    </label>
+                    <select
+                      value={mapping.name}
+                      onChange={(e) => handleMappingChange('name', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Department */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Department / Division</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Cost Center</span>
-                  </label>
-                  <select
-                    value={mapping.department}
-                    onChange={(e) => handleMappingChange('department', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Department */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Department / Division</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Unit</span>
+                    </label>
+                    <select
+                      value={mapping.department}
+                      onChange={(e) => handleMappingChange('department', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Days Present */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Days Present</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Payable day count</span>
-                  </label>
-                  <select
-                    value={mapping.daysPresent}
-                    onChange={(e) => handleMappingChange('daysPresent', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Days Present */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Days Present</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Present</span>
+                    </label>
+                    <select
+                      value={mapping.daysPresent}
+                      onChange={(e) => handleMappingChange('daysPresent', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Days Absent */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Days Absent</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Absence count</span>
-                  </label>
-                  <select
-                    value={mapping.daysAbsent}
-                    onChange={(e) => handleMappingChange('daysAbsent', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Days Absent */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Days Absent</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Absent</span>
+                    </label>
+                    <select
+                      value={mapping.daysAbsent}
+                      onChange={(e) => handleMappingChange('daysAbsent', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Half Days */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Half Days (0.5x)</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Partial days</span>
-                  </label>
-                  <select
-                    value={mapping.halfDays}
-                    onChange={(e) => handleMappingChange('halfDays', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Half Days */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Half Days</span>
+                      <span className="text-[10px] text-slate-400 font-normal">0.5x</span>
+                    </label>
+                    <select
+                      value={mapping.halfDays}
+                      onChange={(e) => handleMappingChange('halfDays', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Overtime Hours */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Overtime Hours</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Regular 1.5x</span>
-                  </label>
-                  <select
-                    value={mapping.overtimeHours}
-                    onChange={(e) => handleMappingChange('overtimeHours', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Paid Leaves */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Paid Leaves (CL/SL)</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Leaves</span>
+                    </label>
+                    <select
+                      value={mapping.paidLeaves}
+                      onChange={(e) => handleMappingChange('paidLeaves', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Paid Leaves */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Paid Leaves (CL/SL/EL)</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Approved leaves</span>
-                  </label>
-                  <select
-                    value={mapping.paidLeaves}
-                    onChange={(e) => handleMappingChange('paidLeaves', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Unpaid Leaves */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Unpaid Leaves (LOP Days)</span>
+                      <span className="text-[10px] text-slate-400 font-normal">LOP</span>
+                    </label>
+                    <select
+                      value={mapping.unpaidLeaves}
+                      onChange={(e) => handleMappingChange('unpaidLeaves', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Unpaid Leaves */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Unpaid Leaves (Loss of Pay)</span>
-                    <span className="text-[10px] text-slate-400 font-normal">LOP deduction</span>
-                  </label>
-                  <select
-                    value={mapping.unpaidLeaves}
-                    onChange={(e) => handleMappingChange('unpaidLeaves', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Overtime Hours */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>OT Hours</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Hours</span>
+                    </label>
+                    <select
+                      value={mapping.overtimeHours}
+                      onChange={(e) => handleMappingChange('overtimeHours', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Late Arrivals */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Late Arrivals / Marks</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Penalty threshold</span>
-                  </label>
-                  <select
-                    value={mapping.lateArrivals}
-                    onChange={(e) => handleMappingChange('lateArrivals', e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Excel Header --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Late Arrivals */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Late Arrivals / Marks</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Count</span>
+                    </label>
+                    <select
+                      value={mapping.lateArrivals}
+                      onChange={(e) => handleMappingChange('lateArrivals', e.target.value)}
+                      className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Excel Header --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Base Salary (Optional) */}
-                <div className="space-y-1.5 p-3 rounded-lg bg-white border border-slate-200">
-                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                    <span>Basic / Base Salary</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Optional auto-set</span>
-                  </label>
-                  <select
-                    value={mapping.baseSalary || ''}
-                    onChange={(e) => handleMappingChange('baseSalary' as any, e.target.value)}
-                    className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">-- Auto-detect / Keep Profile Base --</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
+                  {/* Incentive & Bonus */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-emerald-800 flex items-center justify-between">
+                      <span>Incentive & Bonus</span>
+                      <span className="text-[10px] text-emerald-600 font-semibold">+Earnings</span>
+                    </label>
+                    <select
+                      value={mapping.incentiveBonus}
+                      onChange={(e) => handleMappingChange('incentiveBonus', e.target.value)}
+                      className="w-full text-xs font-medium bg-emerald-50/50 border border-emerald-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Optional (Auto/None) --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Loan & Salary Advances */}
+                  <div className="space-y-1 p-2.5 rounded-lg bg-white border border-slate-200">
+                    <label className="text-xs font-bold text-rose-800 flex items-center justify-between">
+                      <span>Loan & Salary Advances</span>
+                      <span className="text-[10px] text-rose-600 font-semibold">-Deduction</span>
+                    </label>
+                    <select
+                      value={mapping.loanAdvance}
+                      onChange={(e) => handleMappingChange('loanAdvance', e.target.value)}
+                      className="w-full text-xs font-medium bg-rose-50/50 border border-rose-300 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    >
+                      <option value="">-- Optional (0.00) --</option>
+                      {headers.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
+
+              {/* Automatic Calculation Banner */}
+              <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-start space-x-3">
+                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700 shrink-0 mt-0.5">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="text-xs text-slate-700 space-y-1">
+                  <h4 className="font-bold text-emerald-950">Automated Payroll Breakdown Active</h4>
+                  <p className="text-slate-600 leading-relaxed">
+                    Salary components (<strong>Basic 50%</strong>, <strong>HRA 40%</strong>, <strong>Special Allowance</strong>), 
+                    <strong> Overtime Pay (Basic ÷ Present Days ÷ 8 × OT Hours)</strong>, <strong> Loss of Pay (LOP)</strong>, 
+                    <strong> Late Arrival Penalty (1 late = 0.5 day wage)</strong>, and imported <strong>Incentives</strong> or <strong>Loan Advances</strong> are calculated automatically.
+                  </p>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -462,7 +503,7 @@ export const DataIngestionModal: React.FC<DataIngestionModalProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs">
                 <div className="flex items-center space-x-3">
                   <span className="font-semibold text-slate-800">
-                    Validation Outcome: {parsedRecords.length} records ready
+                    Validation Outcome: {parsedRecords.length} records ready for processing
                   </span>
                   {errorCount > 0 ? (
                     <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-medium">
@@ -498,34 +539,36 @@ export const DataIngestionModal: React.FC<DataIngestionModalProps> = ({
                 </div>
               )}
 
-              {/* Table Preview */}
-              <div className="border border-slate-200 rounded-xl overflow-x-auto max-h-64">
+              {/* Table Preview with Attendance Inputs */}
+              <div className="border border-slate-200 rounded-xl overflow-x-auto max-h-80">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-100 text-slate-700 font-semibold sticky top-0">
                     <tr>
                       <th className="p-2.5 border-b border-slate-200">Emp ID</th>
-                      <th className="p-2.5 border-b border-slate-200">Name</th>
-                      <th className="p-2.5 border-b border-slate-200">Basic Salary</th>
-                      <th className="p-2.5 border-b border-slate-200">Present</th>
-                      <th className="p-2.5 border-b border-slate-200">Paid Leave</th>
-                      <th className="p-2.5 border-b border-slate-200">Half Days</th>
-                      <th className="p-2.5 border-b border-slate-200">LOP</th>
-                      <th className="p-2.5 border-b border-slate-200">OT Hrs</th>
-                      <th className="p-2.5 border-b border-slate-200">Lates</th>
+                      <th className="p-2.5 border-b border-slate-200">Employee Name</th>
+                      <th className="p-2.5 border-b border-slate-200">Department</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center">Present</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center">Absent</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center">Half Days</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center">Paid Leaves</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center text-rose-700">Unpaid (LOP)</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center text-purple-700">OT Hours</th>
+                      <th className="p-2.5 border-b border-slate-200 text-center text-amber-700">Late Marks</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {parsedRecords.map((r, idx) => (
                       <tr key={idx} className="hover:bg-slate-50">
                         <td className="p-2.5 font-medium text-blue-600">{r.empId}</td>
-                        <td className="p-2.5 text-slate-800">{r.employeeName || '—'}</td>
-                        <td className="p-2.5 text-emerald-700 font-semibold">{r.baseSalary ? `$${r.baseSalary.toLocaleString()}` : 'Default'}</td>
-                        <td className="p-2.5 text-slate-700 font-semibold">{r.daysPresent}</td>
-                        <td className="p-2.5 text-slate-600">{r.paidLeaves}</td>
-                        <td className="p-2.5 text-slate-600">{r.halfDays}</td>
-                        <td className="p-2.5 text-rose-600 font-medium">{r.unpaidLeaves}</td>
-                        <td className="p-2.5 text-purple-600 font-semibold">{r.overtimeHours}h</td>
-                        <td className="p-2.5 text-amber-600">{r.lateArrivalsCount}</td>
+                        <td className="p-2.5 text-slate-800 whitespace-nowrap font-medium">{r.employeeName || '—'}</td>
+                        <td className="p-2.5 text-slate-600">{r.department || '—'}</td>
+                        <td className="p-2.5 text-center text-emerald-700 font-semibold">{r.daysPresent}</td>
+                        <td className="p-2.5 text-center text-slate-700">{r.daysAbsent}</td>
+                        <td className="p-2.5 text-center text-slate-700">{r.halfDays}</td>
+                        <td className="p-2.5 text-center text-blue-700">{r.paidLeaves}</td>
+                        <td className="p-2.5 text-center text-rose-600 font-semibold">{r.unpaidLeaves}</td>
+                        <td className="p-2.5 text-center text-purple-600 font-semibold">{r.overtimeHours}h</td>
+                        <td className="p-2.5 text-center text-amber-700 font-medium">{r.lateArrivalsCount}</td>
                       </tr>
                     ))}
                   </tbody>
